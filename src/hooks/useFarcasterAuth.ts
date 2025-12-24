@@ -91,6 +91,41 @@ export function useFarcasterAuth() {
     setError(null);
   }, []);
 
+  const refresh = useCallback(async () => {
+    if (!data?.user?.fid) return;
+    
+    setIsConnecting(true);
+    setError(null);
+
+    try {
+      const { data: statsData, error: statsError } = await supabase.functions.invoke('farcaster-auth', {
+        body: { action: 'get_user_stats', fid: data.user.fid },
+      });
+
+      if (statsError) {
+        throw new Error(statsError.message || 'Failed to refresh stats');
+      }
+
+      setData(statsData);
+      
+      toast({
+        title: "Stats refreshed!",
+        description: "Your Farcaster data is now up to date.",
+      });
+
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to refresh';
+      setError(message);
+      toast({
+        title: "Refresh Failed",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsConnecting(false);
+    }
+  }, [data?.user?.fid, toast]);
+
   return {
     isConnecting,
     isConnected,
@@ -98,5 +133,6 @@ export function useFarcasterAuth() {
     error,
     connectByUsername,
     disconnect,
+    refresh,
   };
 }
