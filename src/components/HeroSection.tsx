@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import FarcasterConnect from "./FarcasterConnect";
 
 interface HeroSectionProps {
-  onConnect: (username: string) => void;
+  onConnect: (fid: number) => void;
   isConnecting?: boolean;
 }
 
