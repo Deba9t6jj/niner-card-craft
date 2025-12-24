@@ -4,7 +4,7 @@ import NinerCard from "./NinerCard";
 import ScoreDisplay from "./ScoreDisplay";
 import StatsGrid from "./StatsGrid";
 import { MintNFTButton } from "./MintNFTButton";
-import { Share2, Download, LogOut, Sparkles, MessageCircle, Trophy } from "lucide-react";
+import { Share2, Download, LogOut, Sparkles, MessageCircle, Trophy, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { TierType } from "./NinerCard";
 import type { FarcasterData } from "@/hooks/useFarcasterAuth";
@@ -15,6 +15,8 @@ import { supabase } from "@/integrations/supabase/client";
 interface DashboardProps {
   data: FarcasterData;
   onDisconnect: () => void;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 const getTier = (score: number): TierType => {
@@ -31,7 +33,7 @@ const tierThresholds = [
   { tier: "Diamond", min: 801, max: 999, color: "hsl(200 100% 70%)" },
 ];
 
-export const Dashboard = ({ data, onDisconnect }: DashboardProps) => {
+export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: DashboardProps) => {
   const { user, activity, ninerScore } = data;
   const tier = getTier(ninerScore);
   const { toast } = useToast();
@@ -284,6 +286,18 @@ export const Dashboard = ({ data, onDisconnect }: DashboardProps) => {
           </motion.div>
 
           <div className="flex items-center gap-4">
+            {onRefresh && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={onRefresh}
+                disabled={isRefreshing}
+                className="gap-2 hover:bg-farcaster/10"
+              >
+                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+              </Button>
+            )}
             <Link to="/leaderboard">
               <Button variant="ghost" size="sm" className="gap-2 hover:bg-farcaster/10">
                 <Trophy className="w-4 h-4" />
@@ -537,6 +551,24 @@ export const Dashboard = ({ data, onDisconnect }: DashboardProps) => {
           </motion.div>
         </motion.div>
       </main>
+
+      {/* Footer with creator credit */}
+      <footer className="border-t border-border/50 py-6 mt-12">
+        <div className="container mx-auto px-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+          <span>Built by</span>
+          <a 
+            href="https://x.com/0xleo_ip" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-foreground hover:text-farcaster transition-colors font-medium"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+            0xleo_ip
+          </a>
+        </div>
+      </footer>
     </div>
   );
 };

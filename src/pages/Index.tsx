@@ -4,10 +4,10 @@ import Dashboard from "@/components/Dashboard";
 import { useFarcasterAuth } from "@/hooks/useFarcasterAuth";
 
 const Index = () => {
-  const { isConnecting, isConnected, data, connectByUsername, disconnect } = useFarcasterAuth();
+  const { isConnecting, isConnected, data, connectByUsername, disconnect, refresh } = useFarcasterAuth();
 
   if (isConnected && data) {
-    return <Dashboard data={data} onDisconnect={disconnect} />;
+    return <Dashboard data={data} onDisconnect={disconnect} onRefresh={refresh} isRefreshing={isConnecting} />;
   }
 
   return (
@@ -190,9 +190,21 @@ const Index = () => {
             </div>
             <span className="font-display font-bold">NINER SCORE</span>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Built for Farcaster • Powered by Neynar
-          </p>
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <span>Built for Farcaster • Powered by Neynar</span>
+            <span className="text-muted-foreground/50">•</span>
+            <a 
+              href="https://x.com/0xleo_ip" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-foreground hover:text-farcaster transition-colors font-medium"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+              0xleo_ip
+            </a>
+          </div>
         </div>
       </footer>
     </main>
