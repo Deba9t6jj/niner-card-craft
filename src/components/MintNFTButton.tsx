@@ -55,17 +55,9 @@ export function MintNFTButton({ fid, username, displayName, score, tier, avatarU
     setIsMinting(true);
     
     try {
-      // Generate metadata first
+      // Generate metadata using only FID - server fetches verified data
       const { data: nftData, error: metaError } = await supabase.functions.invoke('generate-nft-metadata', {
-        body: {
-          fid,
-          username,
-          displayName,
-          score,
-          tier,
-          stats,
-          avatarUrl,
-        },
+        body: { fid },
       });
 
       if (metaError) throw metaError;
@@ -85,28 +77,17 @@ export function MintNFTButton({ fid, username, displayName, score, tier, avatarU
       const mockTxHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
       setTxHash(mockTxHash);
 
-      // Save to leaderboard with NFT info
-      const { error: saveError } = await supabase
-        .from('leaderboard')
-        .upsert({
+      // Update NFT status via secure edge function (only updates NFT fields, not score/tier)
+      const { error: updateError } = await supabase.functions.invoke('update-nft-status', {
+        body: {
           fid,
-          username,
-          display_name: displayName,
-          avatar_url: avatarUrl,
-          score,
-          tier,
-          casts: stats.casts,
-          followers: stats.followers,
-          engagement: stats.engagement,
-          nft_minted: true,
-          nft_token_id: nftData.tokenId,
-          nft_transaction_hash: mockTxHash,
-        }, { 
-          onConflict: 'fid' 
-        });
+          transactionHash: mockTxHash,
+          tokenId: nftData.tokenId,
+        },
+      });
 
-      if (saveError) {
-        console.error('Error saving to leaderboard:', saveError);
+      if (updateError) {
+        console.error('Error updating NFT status:', updateError);
       }
 
       toast({
