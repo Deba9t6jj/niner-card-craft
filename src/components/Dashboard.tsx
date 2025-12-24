@@ -3,11 +3,13 @@ import { Button } from "@/components/ui/button";
 import NinerCard from "./NinerCard";
 import ScoreDisplay from "./ScoreDisplay";
 import StatsGrid from "./StatsGrid";
-import { Share2, Download, ExternalLink, LogOut, Sparkles, MessageCircle } from "lucide-react";
+import { MintNFTButton } from "./MintNFTButton";
+import { Share2, Download, LogOut, Sparkles, MessageCircle, Trophy } from "lucide-react";
+import { Link } from "react-router-dom";
 import type { TierType } from "./NinerCard";
 import type { FarcasterData } from "@/hooks/useFarcasterAuth";
 import { useToast } from "@/hooks/use-toast";
-import { useRef, useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface DashboardProps {
@@ -45,7 +47,30 @@ export const Dashboard = ({ data, onDisconnect }: DashboardProps) => {
       ? Math.round((activity.totalLikes + activity.totalRecasts) / Math.max(activity.totalCasts, 1) * 10) / 10
       : 0,
   };
-  const [isGeneratingNFT, setIsGeneratingNFT] = useState(false);
+  
+  // Save to leaderboard on mount
+  useEffect(() => {
+    const saveToLeaderboard = async () => {
+      try {
+        await supabase.functions.invoke('save-to-leaderboard', {
+          body: {
+            fid: user.fid,
+            username: user.username,
+            display_name: user.displayName,
+            avatar_url: user.pfpUrl,
+            score: ninerScore,
+            tier,
+            casts: stats.casts,
+            followers: stats.followers,
+            engagement: stats.engagement,
+          },
+        });
+      } catch (error) {
+        console.error('Error saving to leaderboard:', error);
+      }
+    };
+    saveToLeaderboard();
+  }, [user.fid, ninerScore]);
 
   const handleShare = () => {
     navigator.clipboard.writeText(`🎯 My Niner Score: ${ninerScore} (${tier.toUpperCase()} Tier)\n\nCheck your Farcaster reputation at ninerscore.app`);
@@ -75,56 +100,6 @@ export const Dashboard = ({ data, onDisconnect }: DashboardProps) => {
     });
   };
 
-  const handleOpenSeaClick = async () => {
-    setIsGeneratingNFT(true);
-    
-    toast({
-      title: "Generating NFT metadata...",
-      description: "Creating your unique identity card.",
-    });
-
-    try {
-      const { data: nftData, error } = await supabase.functions.invoke('generate-nft-metadata', {
-        body: {
-          fid: user.fid,
-          username: user.username,
-          displayName: user.displayName,
-          score: ninerScore,
-          tier,
-          stats: {
-            casts: stats.casts,
-            followers: stats.followers,
-            engagement: stats.engagement,
-          },
-          avatarUrl: user.pfpUrl,
-        },
-      });
-
-      if (error) throw error;
-
-      console.log('NFT Metadata:', nftData);
-      
-      // Show the metadata in a toast and open OpenSea
-      toast({
-        title: "NFT Metadata Generated!",
-        description: `Token ID: ${nftData.tokenId?.slice(0, 20)}...`,
-      });
-
-      // Open OpenSea collection page
-      // Note: For actual minting, you'd need to deploy a smart contract
-      window.open('https://opensea.io/collection/farcaster', '_blank');
-      
-    } catch (error) {
-      console.error('Error generating NFT:', error);
-      toast({
-        title: "Error",
-        description: "Failed to generate NFT metadata. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGeneratingNFT(false);
-    }
-  };
 
   const handleDownload = async () => {
     toast({
@@ -309,7 +284,13 @@ export const Dashboard = ({ data, onDisconnect }: DashboardProps) => {
           </motion.div>
 
           <div className="flex items-center gap-4">
-            <motion.div 
+            <Link to="/leaderboard">
+              <Button variant="ghost" size="sm" className="gap-2 hover:bg-farcaster/10">
+                <Trophy className="w-4 h-4" />
+                <span className="hidden sm:inline">Leaderboard</span>
+              </Button>
+            </Link>
+            <motion.div
               className="flex items-center gap-3 bg-card/50 backdrop-blur-sm px-3 py-1.5 rounded-full border border-border/50"
               whileHover={{ scale: 1.02 }}
             >
@@ -373,9 +354,22 @@ export const Dashboard = ({ data, onDisconnect }: DashboardProps) => {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.5 }}
             >
+              <MintNFTButton
+                fid={user.fid}
+                username={user.username}
+                displayName={user.displayName || user.username}
+                score={ninerScore}
+                tier={tier}
+                avatarUrl={user.pfpUrl}
+                stats={{
+                  casts: stats.casts,
+                  followers: stats.followers,
+                  engagement: stats.engagement,
+                }}
+              />
               <Button 
-                variant="farcaster" 
-                className="gap-2 shadow-lg shadow-farcaster/20"
+                variant="outline" 
+                className="gap-2 hover:bg-card transition-colors"
                 onClick={handleWarpcastShare}
               >
                 <MessageCircle className="w-4 h-4" />
@@ -396,15 +390,6 @@ export const Dashboard = ({ data, onDisconnect }: DashboardProps) => {
               >
                 <Download className="w-4 h-4" />
                 Download
-              </Button>
-              <Button 
-                variant="outline" 
-                className="gap-2 hover:bg-card transition-colors"
-                onClick={handleOpenSeaClick}
-                disabled={isGeneratingNFT}
-              >
-                <ExternalLink className="w-4 h-4" />
-                {isGeneratingNFT ? "Generating..." : "OpenSea"}
               </Button>
             </motion.div>
           </motion.div>

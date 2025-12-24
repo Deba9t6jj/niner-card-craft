@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.generate-nft-metadata]
 verify_jwt = false
+
+[functions.save-to-leaderboard]
+verify_jwt = false
