@@ -28,6 +28,11 @@ export interface FarcasterData {
   ninerScore: number;
 }
 
+// Validate username format on client side
+const isValidUsername = (username: string): boolean => {
+  return /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,19}(\.eth)?$/.test(username);
+};
+
 export function useFarcasterAuth() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -35,13 +40,40 @@ export function useFarcasterAuth() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Connect using verified FID from Sign In with Farcaster
-  const connectByFid = useCallback(async (fid: number) => {
+  const connectByUsername = useCallback(async (username: string) => {
     setIsConnecting(true);
     setError(null);
 
+    // Validate username before sending
+    const cleanUsername = username.trim().toLowerCase();
+    if (!cleanUsername || cleanUsername.length > 25 || !isValidUsername(cleanUsername)) {
+      setError('Invalid username format');
+      setIsConnecting(false);
+      toast({
+        title: "Invalid Username",
+        description: "Please enter a valid Farcaster username",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      // Get full stats using the verified FID
+      // First, lookup user by username to get FID
+      const { data: lookupData, error: lookupError } = await supabase.functions.invoke('farcaster-auth', {
+        body: { action: 'lookup_by_username', username: cleanUsername },
+      });
+
+      if (lookupError) {
+        throw new Error(lookupError.message || 'Failed to lookup user');
+      }
+
+      if (!lookupData?.user?.fid) {
+        throw new Error('User not found on Farcaster');
+      }
+
+      const fid = lookupData.user.fid;
+
+      // Now get full stats
       const { data: statsData, error: statsError } = await supabase.functions.invoke('farcaster-auth', {
         body: { action: 'get_user_stats', fid },
       });
@@ -117,7 +149,7 @@ export function useFarcasterAuth() {
     isConnected,
     data,
     error,
-    connectByFid,
+    connectByUsername,
     disconnect,
     refresh,
   };
