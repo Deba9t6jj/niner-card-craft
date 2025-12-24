@@ -1,52 +1,18 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import HeroSection from "@/components/HeroSection";
 import Dashboard from "@/components/Dashboard";
-import { useToast } from "@/hooks/use-toast";
-
-// Mock user data - in production this would come from Farcaster auth
-const mockUser = {
-  username: "vitalik.eth",
-  displayName: "Vitalik Buterin",
-  avatar: "https://i.pravatar.cc/300?img=68",
-  fid: 12345,
-};
+import { useFarcasterAuth } from "@/hooks/useFarcasterAuth";
 
 const Index = () => {
-  const [isConnected, setIsConnected] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const { toast } = useToast();
+  const { isConnecting, isConnected, data, connectByUsername, disconnect } = useFarcasterAuth();
 
-  const handleConnect = async () => {
-    setIsConnecting(true);
-    
-    // Simulate Farcaster auth flow
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setIsConnecting(false);
-    setIsConnected(true);
-    
-    toast({
-      title: "Connected!",
-      description: "Welcome to Niner Score. Calculating your reputation...",
-    });
-  };
-
-  const handleDisconnect = () => {
-    setIsConnected(false);
-    toast({
-      title: "Disconnected",
-      description: "You've been signed out of your Farcaster account.",
-    });
-  };
-
-  if (isConnected) {
-    return <Dashboard user={mockUser} onDisconnect={handleDisconnect} />;
+  if (isConnected && data) {
+    return <Dashboard data={data} onDisconnect={disconnect} />;
   }
 
   return (
     <main className="relative">
-      <HeroSection onConnect={handleConnect} isConnecting={isConnecting} />
+      <HeroSection onConnect={connectByUsername} isConnecting={isConnecting} />
       
       {/* Features section */}
       <section className="py-24 px-6 bg-background">
@@ -69,8 +35,8 @@ const Index = () => {
             {[
               {
                 step: "01",
-                title: "Connect Farcaster",
-                description: "Sign in securely with your Warpcast or Farcaster signer",
+                title: "Enter Username",
+                description: "Enter your Farcaster username to connect your account",
                 icon: "🔗",
               },
               {
@@ -211,14 +177,6 @@ const Index = () => {
             <p className="text-muted-foreground text-lg mb-8">
               Join thousands of Farcaster users who've already claimed their unique NFT cards.
             </p>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleConnect}
-              className="inline-flex items-center gap-3 bg-gradient-to-r from-farcaster to-accent text-foreground font-display font-bold text-lg px-10 py-5 rounded-xl glow-primary shadow-2xl"
-            >
-              Get Started — It's Free
-            </motion.button>
           </motion.div>
         </div>
       </section>
@@ -233,7 +191,7 @@ const Index = () => {
             <span className="font-display font-bold">NINER SCORE</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            Built for Farcaster • Powered by Neynar & OpenSea
+            Built for Farcaster • Powered by Neynar
           </p>
         </div>
       </footer>

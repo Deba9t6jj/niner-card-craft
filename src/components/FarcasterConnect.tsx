@@ -1,13 +1,24 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Zap } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Zap, Search } from "lucide-react";
 
 interface FarcasterConnectProps {
-  onConnect: () => void;
+  onConnect: (username: string) => void;
   isConnecting?: boolean;
 }
 
 export const FarcasterConnect = ({ onConnect, isConnecting = false }: FarcasterConnectProps) => {
+  const [username, setUsername] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (username.trim()) {
+      onConnect(username.trim());
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -41,28 +52,42 @@ export const FarcasterConnect = ({ onConnect, isConnecting = false }: FarcasterC
           Connect Farcaster
         </h3>
         <p className="text-sm text-muted-foreground max-w-xs">
-          Sign in with your Farcaster account to generate your unique Niner Score
+          Enter your Farcaster username to generate your unique Niner Score
         </p>
       </div>
 
-      <Button
-        variant="hero"
-        onClick={onConnect}
-        disabled={isConnecting}
-        className="relative overflow-hidden group"
-      >
-        {isConnecting ? (
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          >
-            <Zap className="w-5 h-5" />
-          </motion.div>
-        ) : (
-          <Zap className="w-5 h-5 group-hover:scale-110 transition-transform" />
-        )}
-        {isConnecting ? "Connecting..." : "Connect with Warpcast"}
-      </Button>
+      <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4 w-full max-w-xs">
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Enter username (e.g. dwr.eth)"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="pl-10 bg-card border-border text-foreground placeholder:text-muted-foreground"
+            disabled={isConnecting}
+          />
+        </div>
+        
+        <Button
+          type="submit"
+          variant="hero"
+          disabled={isConnecting || !username.trim()}
+          className="relative overflow-hidden group w-full"
+        >
+          {isConnecting ? (
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            >
+              <Zap className="w-5 h-5" />
+            </motion.div>
+          ) : (
+            <Zap className="w-5 h-5 group-hover:scale-110 transition-transform" />
+          )}
+          {isConnecting ? "Fetching your data..." : "Get My Niner Score"}
+        </Button>
+      </form>
 
       <p className="text-xs text-muted-foreground">
         Powered by Neynar • Secure & Private
