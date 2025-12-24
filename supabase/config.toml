@@ -1,1 +1,4 @@
 project_id = "vdxsmqqzjvobgboczeyd"
+
+[functions.farcaster-auth]
+verify_jwt = false
