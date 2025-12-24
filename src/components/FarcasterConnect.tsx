@@ -1,121 +1,51 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Zap, ExternalLink, CheckCircle, XCircle, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Zap, Search } from "lucide-react";
 
 interface FarcasterConnectProps {
-  onConnect: (fid: number) => void;
+  onConnect: (username: string) => void;
   isConnecting?: boolean;
 }
 
-// Generate a random nonce for security
-const generateNonce = () => {
-  const array = new Uint8Array(16);
-  crypto.getRandomValues(array);
-  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+// Validate Farcaster username format
+const isValidUsername = (username: string): boolean => {
+  // Farcaster usernames: 1-16 chars, alphanumeric, can include dots and dashes
+  // Also allow .eth suffix
+  return /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,19}(\.eth)?$/.test(username);
 };
 
 export const FarcasterConnect = ({ onConnect, isConnecting = false }: FarcasterConnectProps) => {
-  const [authState, setAuthState] = useState<'idle' | 'pending' | 'polling' | 'success' | 'error'>('idle');
-  const [channelToken, setChannelToken] = useState<string | null>(null);
-  const [authUrl, setAuthUrl] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const { toast } = useToast();
+  const [username, setUsername] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  // Start the Sign In with Farcaster flow
-  const startAuth = async () => {
-    setAuthState('pending');
-    setErrorMessage(null);
-
-    try {
-      // Call our edge function to create a sign-in channel
-      const { data, error } = await supabase.functions.invoke('farcaster-auth', {
-        body: { 
-          action: 'create_signin_channel',
-          nonce: generateNonce(),
-        },
-      });
-
-      if (error) throw new Error(error.message);
-
-      if (data?.channelToken && data?.url) {
-        setChannelToken(data.channelToken);
-        setAuthUrl(data.url);
-        setAuthState('polling');
-        
-        // Open Warpcast in a new tab
-        window.open(data.url, '_blank');
-      } else {
-        throw new Error('Invalid response from auth server');
-      }
-    } catch (err) {
-      console.error('Auth start error:', err);
-      setErrorMessage(err instanceof Error ? err.message : 'Failed to start authentication');
-      setAuthState('error');
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmedUsername = username.trim().toLowerCase();
+    
+    if (!trimmedUsername) {
+      setError("Please enter a username");
+      return;
     }
+    
+    if (trimmedUsername.length > 20) {
+      setError("Username is too long");
+      return;
+    }
+    
+    if (!isValidUsername(trimmedUsername)) {
+      setError("Invalid username format");
+      return;
+    }
+    
+    setError(null);
+    onConnect(trimmedUsername);
   };
 
-  // Poll for authentication completion
-  useEffect(() => {
-    if (authState !== 'polling' || !channelToken) return;
-
-    let pollCount = 0;
-    const maxPolls = 60; // 2 minutes max (2s intervals)
-
-    const pollInterval = setInterval(async () => {
-      pollCount++;
-      
-      if (pollCount > maxPolls) {
-        clearInterval(pollInterval);
-        setAuthState('error');
-        setErrorMessage('Authentication timed out. Please try again.');
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase.functions.invoke('farcaster-auth', {
-          body: { 
-            action: 'check_signin_status',
-            channelToken,
-          },
-        });
-
-        if (error) {
-          console.error('Poll error:', error);
-          return;
-        }
-
-        if (data?.state === 'completed' && data?.fid) {
-          clearInterval(pollInterval);
-          setAuthState('success');
-          
-          toast({
-            title: "Connected!",
-            description: "Successfully authenticated with Farcaster",
-          });
-          
-          // Give a moment for the UI to update before calling onConnect
-          setTimeout(() => onConnect(data.fid), 500);
-        } else if (data?.state === 'error') {
-          clearInterval(pollInterval);
-          setAuthState('error');
-          setErrorMessage(data.message || 'Authentication failed');
-        }
-      } catch (err) {
-        console.error('Poll error:', err);
-      }
-    }, 2000);
-
-    return () => clearInterval(pollInterval);
-  }, [authState, channelToken, onConnect, toast]);
-
-  const resetAuth = () => {
-    setAuthState('idle');
-    setChannelToken(null);
-    setAuthUrl(null);
-    setErrorMessage(null);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUsername(e.target.value);
+    if (error) setError(null);
   };
 
   return (
@@ -151,86 +81,50 @@ export const FarcasterConnect = ({ onConnect, isConnecting = false }: FarcasterC
           Connect Farcaster
         </h3>
         <p className="text-sm text-muted-foreground max-w-xs">
-          {authState === 'idle' && "Sign in with Warpcast to securely view your Niner Score"}
-          {authState === 'pending' && "Starting authentication..."}
-          {authState === 'polling' && "Waiting for you to approve in Warpcast..."}
-          {authState === 'success' && "Connected! Loading your data..."}
-          {authState === 'error' && (errorMessage || "Something went wrong")}
+          Enter your Farcaster username to generate your unique Niner Score
         </p>
       </div>
 
-      <div className="flex flex-col items-center gap-4 w-full max-w-xs">
-        {authState === 'idle' && (
-          <Button
-            onClick={startAuth}
-            variant="hero"
+      <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4 w-full max-w-xs">
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Enter username (e.g. dwr.eth)"
+            value={username}
+            onChange={handleChange}
+            className={`pl-10 bg-card border-border text-foreground placeholder:text-muted-foreground ${error ? 'border-destructive' : ''}`}
             disabled={isConnecting}
-            className="relative overflow-hidden group w-full"
-          >
-            <Zap className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
-            Sign in with Farcaster
-          </Button>
+            maxLength={25}
+          />
+        </div>
+        
+        {error && (
+          <p className="text-sm text-destructive">{error}</p>
         )}
-
-        {authState === 'pending' && (
-          <Button disabled variant="hero" className="w-full">
-            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-            Starting...
-          </Button>
-        )}
-
-        {authState === 'polling' && (
-          <div className="flex flex-col items-center gap-4 w-full">
-            <Button disabled variant="outline" className="w-full">
-              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              Waiting for approval...
-            </Button>
-            
-            {authUrl && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.open(authUrl, '_blank')}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Open Warpcast again
-              </Button>
-            )}
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={resetAuth}
-              className="text-muted-foreground hover:text-foreground"
+        
+        <Button
+          type="submit"
+          variant="hero"
+          disabled={isConnecting || !username.trim()}
+          className="relative overflow-hidden group w-full"
+        >
+          {isConnecting ? (
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
             >
-              Cancel
-            </Button>
-          </div>
-        )}
-
-        {authState === 'success' && (
-          <div className="flex items-center gap-2 text-green-500">
-            <CheckCircle className="w-5 h-5" />
-            <span>Connected!</span>
-          </div>
-        )}
-
-        {authState === 'error' && (
-          <div className="flex flex-col items-center gap-3 w-full">
-            <div className="flex items-center gap-2 text-destructive">
-              <XCircle className="w-5 h-5" />
-              <span className="text-sm">{errorMessage}</span>
-            </div>
-            <Button onClick={resetAuth} variant="outline" className="w-full">
-              Try Again
-            </Button>
-          </div>
-        )}
-      </div>
+              <Zap className="w-5 h-5" />
+            </motion.div>
+          ) : (
+            <Zap className="w-5 h-5 group-hover:scale-110 transition-transform" />
+          )}
+          {isConnecting ? "Fetching your data..." : "Get My Niner Score"}
+        </Button>
+      </form>
 
       <p className="text-xs text-muted-foreground">
-        Secure authentication via Warpcast
+        Powered by Neynar • Secure & Private
       </p>
     </motion.div>
   );
