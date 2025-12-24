@@ -14,7 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      leaderboard: {
+        Row: {
+          avatar_url: string | null
+          casts: number | null
+          created_at: string
+          display_name: string | null
+          engagement: number | null
+          fid: number
+          followers: number | null
+          id: string
+          nft_minted: boolean | null
+          nft_token_id: string | null
+          nft_transaction_hash: string | null
+          score: number
+          tier: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          casts?: number | null
+          created_at?: string
+          display_name?: string | null
+          engagement?: number | null
+          fid: number
+          followers?: number | null
+          id?: string
+          nft_minted?: boolean | null
+          nft_token_id?: string | null
+          nft_transaction_hash?: string | null
+          score?: number
+          tier?: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          avatar_url?: string | null
+          casts?: number | null
+          created_at?: string
+          display_name?: string | null
+          engagement?: number | null
+          fid?: number
+          followers?: number | null
+          id?: string
+          nft_minted?: boolean | null
+          nft_token_id?: string | null
+          nft_transaction_hash?: string | null
+          score?: number
+          tier?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
