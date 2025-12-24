@@ -50,7 +50,8 @@ export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: Dashb
       : 0,
   };
   
-  // Save to leaderboard on mount
+  // Save to leaderboard on mount - only sends FID and username
+  // Score is calculated server-side for security
   useEffect(() => {
     const saveToLeaderboard = async () => {
       try {
@@ -58,13 +59,6 @@ export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: Dashb
           body: {
             fid: user.fid,
             username: user.username,
-            display_name: user.displayName,
-            avatar_url: user.pfpUrl,
-            score: ninerScore,
-            tier,
-            casts: stats.casts,
-            followers: stats.followers,
-            engagement: stats.engagement,
           },
         });
       } catch (error) {
@@ -72,7 +66,7 @@ export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: Dashb
       }
     };
     saveToLeaderboard();
-  }, [user.fid, ninerScore]);
+  }, [user.fid]);
 
   const handleShare = () => {
     navigator.clipboard.writeText(`🎯 My Niner Score: ${ninerScore} (${tier.toUpperCase()} Tier)\n\nCheck your Farcaster reputation at ninerscore.app`);
