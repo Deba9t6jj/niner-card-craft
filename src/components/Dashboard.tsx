@@ -7,6 +7,7 @@ import { Share2, Download, ExternalLink, LogOut, Sparkles } from "lucide-react";
 import type { TierType } from "./NinerCard";
 import type { FarcasterData } from "@/hooks/useFarcasterAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useRef } from "react";
 
 interface DashboardProps {
   data: FarcasterData;
@@ -49,6 +50,164 @@ export const Dashboard = ({ data, onDisconnect }: DashboardProps) => {
     toast({
       title: "Copied to clipboard!",
       description: "Share your score on Farcaster or Twitter.",
+    });
+  };
+
+  const handleDownload = async () => {
+    toast({
+      title: "Preparing download...",
+      description: "Generating your NFT card image.",
+    });
+    
+    // Create a canvas to draw the card
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    canvas.width = 640;
+    canvas.height = 800;
+    
+    // Draw background
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, '#14141e');
+    gradient.addColorStop(1, '#0f0f16');
+    ctx.fillStyle = gradient;
+    ctx.roundRect(0, 0, canvas.width, canvas.height, 40);
+    ctx.fill();
+    
+    // Draw tier accent glow at top
+    const tierColors: Record<string, string> = {
+      bronze: '#CD7F32',
+      silver: '#C0C0C0', 
+      gold: '#FFD700',
+      diamond: '#00BFFF',
+    };
+    const accentColor = tierColors[tier];
+    
+    ctx.fillStyle = accentColor + '30';
+    ctx.beginPath();
+    ctx.ellipse(canvas.width / 2, 50, 150, 80, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Draw tier indicators
+    const indicatorY = 40;
+    const indicatorSpacing = 28;
+    const startX = canvas.width / 2 - (indicatorSpacing * 1.5);
+    const tierIndex = ["bronze", "silver", "gold", "diamond"].indexOf(tier);
+    
+    for (let i = 0; i < 4; i++) {
+      ctx.fillStyle = i <= tierIndex ? accentColor : 'rgba(255,255,255,0.2)';
+      const width = i === 0 ? 36 : 24;
+      ctx.beginPath();
+      ctx.roundRect(startX + i * indicatorSpacing - (i === 0 ? 6 : 0), indicatorY, width, 4, 2);
+      ctx.fill();
+    }
+    
+    // Draw avatar placeholder
+    ctx.fillStyle = accentColor;
+    ctx.beginPath();
+    ctx.roundRect(canvas.width / 2 - 80, 100, 160, 160, 24);
+    ctx.fill();
+    
+    // Load and draw avatar if available
+    if (user.pfpUrl) {
+      try {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = user.pfpUrl;
+        });
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(canvas.width / 2 - 80, 100, 160, 160, 24);
+        ctx.clip();
+        ctx.drawImage(img, canvas.width / 2 - 80, 100, 160, 160);
+        ctx.restore();
+      } catch (e) {
+        // Keep placeholder
+      }
+    }
+    
+    // Draw score badge
+    ctx.fillStyle = accentColor;
+    ctx.beginPath();
+    ctx.roundRect(canvas.width / 2 + 50, 220, 60, 60, 16);
+    ctx.fill();
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 24px Orbitron, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(ninerScore.toString(), canvas.width / 2 + 80, 260);
+    
+    // Draw name
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 28px Orbitron, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(user.displayName || user.username, canvas.width / 2, 320);
+    
+    ctx.fillStyle = '#888';
+    ctx.font = '18px Inter, sans-serif';
+    ctx.fillText('@' + user.username, canvas.width / 2, 350);
+    
+    // Draw tier label
+    ctx.fillStyle = accentColor;
+    ctx.font = 'bold 16px Orbitron, sans-serif';
+    ctx.fillText(tier.toUpperCase() + ' TIER', canvas.width / 2, 400);
+    
+    // Draw stats
+    const statsData = [
+      { label: 'CASTS', value: stats.casts.toLocaleString() },
+      { label: 'FOLLOWERS', value: stats.followers.toLocaleString() },
+    ];
+    
+    let yPos = 460;
+    statsData.forEach(stat => {
+      // Background
+      const bgGradient = ctx.createLinearGradient(60, yPos, canvas.width - 60, yPos);
+      bgGradient.addColorStop(0, accentColor + '30');
+      bgGradient.addColorStop(1, 'transparent');
+      ctx.fillStyle = bgGradient;
+      ctx.beginPath();
+      ctx.roundRect(60, yPos, canvas.width - 120, 60, 12);
+      ctx.fill();
+      
+      // Left accent
+      ctx.fillStyle = accentColor;
+      ctx.beginPath();
+      ctx.roundRect(60, yPos, 4, 60, 2);
+      ctx.fill();
+      
+      // Label
+      ctx.fillStyle = '#888';
+      ctx.font = '14px Inter, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(stat.label, 90, yPos + 38);
+      
+      // Value
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 22px Orbitron, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(stat.value, canvas.width - 80, yPos + 38);
+      
+      yPos += 80;
+    });
+    
+    // Draw footer
+    ctx.fillStyle = '#444';
+    ctx.font = '12px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('NINER SCORE • Farcaster Identity', canvas.width / 2, canvas.height - 30);
+    
+    // Download
+    const link = document.createElement('a');
+    link.download = `niner-score-${user.username}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    
+    toast({
+      title: "Downloaded!",
+      description: "Your NFT card has been saved.",
     });
   };
 
@@ -149,7 +308,11 @@ export const Dashboard = ({ data, onDisconnect }: DashboardProps) => {
                 <Share2 className="w-4 h-4" />
                 Share
               </Button>
-              <Button variant="outline" className="gap-2 hover:bg-card transition-colors">
+              <Button 
+                variant="outline" 
+                className="gap-2 hover:bg-card transition-colors"
+                onClick={handleDownload}
+              >
                 <Download className="w-4 h-4" />
                 Download
               </Button>
