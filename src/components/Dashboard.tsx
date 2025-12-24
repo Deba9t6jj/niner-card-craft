@@ -36,7 +36,7 @@ export const Dashboard = ({ data, onDisconnect }: DashboardProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-hero">
+    <div className="min-h-screen bg-hero light-beam-bg">
       {/* Header */}
       <header className="border-b border-border/50 backdrop-blur-sm bg-background/50 sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">

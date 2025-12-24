@@ -8,7 +8,7 @@ interface HeroSectionProps {
 
 export const HeroSection = ({ onConnect, isConnecting }: HeroSectionProps) => {
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-6 py-20 bg-hero overflow-hidden">
+    <section className="relative min-h-screen flex flex-col items-center justify-center px-6 py-20 bg-hero light-beam-bg overflow-hidden">
       {/* Background effects */}
       <div className="absolute inset-0 overflow-hidden">
         {/* Gradient orbs */}
