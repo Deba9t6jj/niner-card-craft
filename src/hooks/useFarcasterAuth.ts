@@ -35,27 +35,13 @@ export function useFarcasterAuth() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const connectByUsername = useCallback(async (username: string) => {
+  // Connect using verified FID from Sign In with Farcaster
+  const connectByFid = useCallback(async (fid: number) => {
     setIsConnecting(true);
     setError(null);
 
     try {
-      // First, lookup user by username to get FID
-      const { data: lookupData, error: lookupError } = await supabase.functions.invoke('farcaster-auth', {
-        body: { action: 'lookup_by_username', username },
-      });
-
-      if (lookupError) {
-        throw new Error(lookupError.message || 'Failed to lookup user');
-      }
-
-      if (!lookupData?.user?.fid) {
-        throw new Error('User not found on Farcaster');
-      }
-
-      const fid = lookupData.user.fid;
-
-      // Now get full stats
+      // Get full stats using the verified FID
       const { data: statsData, error: statsError } = await supabase.functions.invoke('farcaster-auth', {
         body: { action: 'get_user_stats', fid },
       });
@@ -131,7 +117,7 @@ export function useFarcasterAuth() {
     isConnected,
     data,
     error,
-    connectByUsername,
+    connectByFid,
     disconnect,
     refresh,
   };

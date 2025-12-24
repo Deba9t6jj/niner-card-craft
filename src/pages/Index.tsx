@@ -4,7 +4,7 @@ import Dashboard from "@/components/Dashboard";
 import { useFarcasterAuth } from "@/hooks/useFarcasterAuth";
 
 const Index = () => {
-  const { isConnecting, isConnected, data, connectByUsername, disconnect, refresh } = useFarcasterAuth();
+  const { isConnecting, isConnected, data, connectByFid, disconnect, refresh } = useFarcasterAuth();
 
   if (isConnected && data) {
     return <Dashboard data={data} onDisconnect={disconnect} onRefresh={refresh} isRefreshing={isConnecting} />;
@@ -12,7 +12,7 @@ const Index = () => {
 
   return (
     <main className="relative">
-      <HeroSection onConnect={connectByUsername} isConnecting={isConnecting} />
+      <HeroSection onConnect={connectByFid} isConnecting={isConnecting} />
       
       {/* Features section */}
       <section className="py-24 px-6 bg-background">
@@ -35,8 +35,8 @@ const Index = () => {
             {[
               {
                 step: "01",
-                title: "Enter Username",
-                description: "Enter your Farcaster username to connect your account",
+                title: "Connect Farcaster",
+                description: "Sign in with Warpcast to securely connect your account",
                 icon: "🔗",
               },
               {

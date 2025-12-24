@@ -7,6 +7,26 @@ const corsHeaders = {
 
 const NEYNAR_API_KEY = Deno.env.get('NEYNAR_API_KEY');
 
+// In-memory store for auth channels (in production, use a database)
+const authChannels = new Map<string, {
+  nonce: string;
+  state: 'pending' | 'completed' | 'error';
+  fid?: number;
+  message?: string;
+  createdAt: number;
+}>();
+
+// Clean up old channels every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [token, channel] of authChannels) {
+    // Remove channels older than 10 minutes
+    if (now - channel.createdAt > 10 * 60 * 1000) {
+      authChannels.delete(token);
+    }
+  }
+}, 5 * 60 * 1000);
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -14,41 +34,116 @@ serve(async (req) => {
   }
 
   try {
-    const { action, fid, username } = await req.json();
-    console.log(`Farcaster auth action: ${action}, fid: ${fid}, username: ${username}`);
+    const { action, fid, nonce, channelToken } = await req.json();
+    console.log(`Farcaster auth action: ${action}`);
 
     if (!NEYNAR_API_KEY) {
       console.error('NEYNAR_API_KEY is not configured');
       throw new Error('Neynar API key not configured');
     }
 
-    if (action === 'lookup_by_username') {
-      // Look up user by username
-      const response = await fetch(
-        `https://api.neynar.com/v2/farcaster/user/by_username?username=${encodeURIComponent(username)}`,
-        {
-          headers: {
-            'accept': 'application/json',
-            'x-api-key': NEYNAR_API_KEY,
-          },
-        }
-      );
+    // Create a new Sign In with Farcaster channel
+    if (action === 'create_signin_channel') {
+      // Create auth channel using Neynar's SIWN API
+      const response = await fetch('https://api.neynar.com/v2/farcaster/login/authorize', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'content-type': 'application/json',
+          'x-api-key': NEYNAR_API_KEY,
+        },
+        body: JSON.stringify({
+          response_type: 'code',
+        }),
+      });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Neynar API error:', response.status, errorText);
-        throw new Error(`Failed to lookup user: ${response.status}`);
+        console.error('Neynar auth channel error:', response.status, errorText);
+        throw new Error(`Failed to create auth channel: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('User lookup response:', JSON.stringify(data));
-      
-      return new Response(JSON.stringify(data), {
+      console.log('Auth channel created:', JSON.stringify(data));
+
+      // Store the channel info
+      const token = data.signer_uuid || crypto.randomUUID();
+      authChannels.set(token, {
+        nonce: nonce || crypto.randomUUID(),
+        state: 'pending',
+        createdAt: Date.now(),
+      });
+
+      return new Response(JSON.stringify({
+        channelToken: token,
+        url: data.authorization_url,
+        signerUuid: data.signer_uuid,
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Check the status of a Sign In with Farcaster request
+    if (action === 'check_signin_status') {
+      if (!channelToken) {
+        throw new Error('Channel token required');
+      }
+
+      // Check status with Neynar
+      const response = await fetch(`https://api.neynar.com/v2/farcaster/login/authorize?signer_uuid=${channelToken}`, {
+        headers: {
+          'accept': 'application/json',
+          'x-api-key': NEYNAR_API_KEY,
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Neynar status check error:', response.status, errorText);
+        
+        return new Response(JSON.stringify({
+          state: 'pending',
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const data = await response.json();
+      console.log('Auth status:', JSON.stringify(data));
+
+      // Check if authentication is complete
+      if (data.state === 'approved' && data.fid) {
+        return new Response(JSON.stringify({
+          state: 'completed',
+          fid: data.fid,
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (data.state === 'pending') {
+        return new Response(JSON.stringify({
+          state: 'pending',
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Handle error or rejected states
+      return new Response(JSON.stringify({
+        state: 'error',
+        message: data.message || 'Authentication failed',
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     if (action === 'get_user_stats') {
+      // Validate FID is a positive integer
+      if (!fid || !Number.isInteger(fid) || fid <= 0) {
+        throw new Error('Valid FID required');
+      }
+
       // Get user profile and stats by FID
       const userResponse = await fetch(
         `https://api.neynar.com/v2/farcaster/user/bulk?fids=${fid}`,
