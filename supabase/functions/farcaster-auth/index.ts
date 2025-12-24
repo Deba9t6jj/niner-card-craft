@@ -52,8 +52,8 @@ serve(async (req) => {
       const cleanUsername = username.trim().toLowerCase();
       console.log('Looking up username:', cleanUsername);
 
-      // Look up user by username
-      const response = await fetch(
+      // Try direct username lookup first
+      let response = await fetch(
         `https://api.neynar.com/v2/farcaster/user/by_username?username=${encodeURIComponent(cleanUsername)}`,
         {
           headers: {
@@ -63,20 +63,49 @@ serve(async (req) => {
         }
       );
 
+      // If not found, try search endpoint (works better for ENS names)
+      if (response.status === 404) {
+        console.log('Username not found directly, trying search endpoint...');
+        
+        const searchResponse = await fetch(
+          `https://api.neynar.com/v2/farcaster/user/search?q=${encodeURIComponent(cleanUsername)}&limit=1`,
+          {
+            headers: {
+              'accept': 'application/json',
+              'x-api-key': NEYNAR_API_KEY,
+            },
+          }
+        );
+
+        if (searchResponse.ok) {
+          const searchData = await searchResponse.json();
+          const matchedUser = searchData.result?.users?.[0];
+          
+          // Verify the username matches exactly (case-insensitive)
+          if (matchedUser && (
+            matchedUser.username?.toLowerCase() === cleanUsername ||
+            matchedUser.display_name?.toLowerCase() === cleanUsername
+          )) {
+            console.log('Found user via search:', matchedUser.username);
+            return new Response(JSON.stringify({ user: matchedUser }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+        }
+
+        // If search also fails, return user not found
+        return new Response(
+          JSON.stringify({ error: 'User not found on Farcaster. Please check the username and try again.' }),
+          { 
+            status: 404, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Neynar API error:', response.status, errorText);
-        
-        if (response.status === 404) {
-          return new Response(
-            JSON.stringify({ error: 'User not found on Farcaster' }),
-            { 
-              status: 404, 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-            }
-          );
-        }
-        
         throw new Error(`Failed to lookup user: ${response.status}`);
       }
 
