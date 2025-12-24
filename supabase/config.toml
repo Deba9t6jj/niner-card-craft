@@ -2,3 +2,6 @@ project_id = "vdxsmqqzjvobgboczeyd"
 
 [functions.farcaster-auth]
 verify_jwt = false
+
+[functions.generate-nft-metadata]
+verify_jwt = false

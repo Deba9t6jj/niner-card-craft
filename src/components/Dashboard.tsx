@@ -3,11 +3,12 @@ import { Button } from "@/components/ui/button";
 import NinerCard from "./NinerCard";
 import ScoreDisplay from "./ScoreDisplay";
 import StatsGrid from "./StatsGrid";
-import { Share2, Download, ExternalLink, LogOut, Sparkles } from "lucide-react";
+import { Share2, Download, ExternalLink, LogOut, Sparkles, MessageCircle } from "lucide-react";
 import type { TierType } from "./NinerCard";
 import type { FarcasterData } from "@/hooks/useFarcasterAuth";
 import { useToast } from "@/hooks/use-toast";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DashboardProps {
   data: FarcasterData;
@@ -44,6 +45,7 @@ export const Dashboard = ({ data, onDisconnect }: DashboardProps) => {
       ? Math.round((activity.totalLikes + activity.totalRecasts) / Math.max(activity.totalCasts, 1) * 10) / 10
       : 0,
   };
+  const [isGeneratingNFT, setIsGeneratingNFT] = useState(false);
 
   const handleShare = () => {
     navigator.clipboard.writeText(`🎯 My Niner Score: ${ninerScore} (${tier.toUpperCase()} Tier)\n\nCheck your Farcaster reputation at ninerscore.app`);
@@ -51,6 +53,77 @@ export const Dashboard = ({ data, onDisconnect }: DashboardProps) => {
       title: "Copied to clipboard!",
       description: "Share your score on Farcaster or Twitter.",
     });
+  };
+
+  const handleWarpcastShare = () => {
+    // Create Warpcast intent URL with pre-filled cast
+    const castText = encodeURIComponent(
+      `🎯 My Niner Score: ${ninerScore} (${tier.toUpperCase()} Tier)\n\n` +
+      `📊 Stats:\n` +
+      `• ${stats.casts} casts\n` +
+      `• ${stats.followers.toLocaleString()} followers\n` +
+      `• ${stats.engagement}% engagement\n\n` +
+      `Check your Farcaster reputation 👇`
+    );
+    
+    const warpcastUrl = `https://warpcast.com/~/compose?text=${castText}`;
+    window.open(warpcastUrl, '_blank');
+    
+    toast({
+      title: "Opening Warpcast",
+      description: "Share your Niner Score with your followers!",
+    });
+  };
+
+  const handleOpenSeaClick = async () => {
+    setIsGeneratingNFT(true);
+    
+    toast({
+      title: "Generating NFT metadata...",
+      description: "Creating your unique identity card.",
+    });
+
+    try {
+      const { data: nftData, error } = await supabase.functions.invoke('generate-nft-metadata', {
+        body: {
+          fid: user.fid,
+          username: user.username,
+          displayName: user.displayName,
+          score: ninerScore,
+          tier,
+          stats: {
+            casts: stats.casts,
+            followers: stats.followers,
+            engagement: stats.engagement,
+          },
+          avatarUrl: user.pfpUrl,
+        },
+      });
+
+      if (error) throw error;
+
+      console.log('NFT Metadata:', nftData);
+      
+      // Show the metadata in a toast and open OpenSea
+      toast({
+        title: "NFT Metadata Generated!",
+        description: `Token ID: ${nftData.tokenId?.slice(0, 20)}...`,
+      });
+
+      // Open OpenSea collection page
+      // Note: For actual minting, you'd need to deploy a smart contract
+      window.open('https://opensea.io/collection/farcaster', '_blank');
+      
+    } catch (error) {
+      console.error('Error generating NFT:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate NFT metadata. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingNFT(false);
+    }
   };
 
   const handleDownload = async () => {
@@ -295,7 +368,7 @@ export const Dashboard = ({ data, onDisconnect }: DashboardProps) => {
 
             {/* Action buttons */}
             <motion.div 
-              className="flex items-center gap-3"
+              className="flex flex-wrap items-center justify-center gap-3"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.5 }}
@@ -303,10 +376,18 @@ export const Dashboard = ({ data, onDisconnect }: DashboardProps) => {
               <Button 
                 variant="farcaster" 
                 className="gap-2 shadow-lg shadow-farcaster/20"
+                onClick={handleWarpcastShare}
+              >
+                <MessageCircle className="w-4 h-4" />
+                Cast It
+              </Button>
+              <Button 
+                variant="outline" 
+                className="gap-2 hover:bg-card transition-colors"
                 onClick={handleShare}
               >
                 <Share2 className="w-4 h-4" />
-                Share
+                Copy
               </Button>
               <Button 
                 variant="outline" 
@@ -316,9 +397,14 @@ export const Dashboard = ({ data, onDisconnect }: DashboardProps) => {
                 <Download className="w-4 h-4" />
                 Download
               </Button>
-              <Button variant="outline" className="gap-2 hover:bg-card transition-colors">
+              <Button 
+                variant="outline" 
+                className="gap-2 hover:bg-card transition-colors"
+                onClick={handleOpenSeaClick}
+                disabled={isGeneratingNFT}
+              >
                 <ExternalLink className="w-4 h-4" />
-                OpenSea
+                {isGeneratingNFT ? "Generating..." : "OpenSea"}
               </Button>
             </motion.div>
           </motion.div>
