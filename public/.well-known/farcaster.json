@@ -1,0 +1,14 @@
+{
+  "name": "Winer Score",
+  "iconUrl": "https://www.neynar-card-craft.fun/icon.png",
+  "description": "Get your free NFT identity card based on your Farcaster engagement score",
+  "screenshots": [
+    "https://lovable.dev/opengraph-image-p98pqg.png"
+  ],
+  "url": "https://www.neynar-card-craft.fun",
+  "accountAssociation": {
+    "header": "",
+    "payload": "",
+    "signature": ""
+  }
+}
