@@ -1,14 +1,27 @@
 {
-  "name": "Winer Score",
-  "iconUrl": "https://www.neynar-card-craft.fun/icon.png",
-  "description": "Get your free NFT identity card based on your Farcaster engagement score",
-  "screenshots": [
-    "https://lovable.dev/opengraph-image-p98pqg.png"
-  ],
-  "url": "https://www.neynar-card-craft.fun",
   "accountAssociation": {
     "header": "",
     "payload": "",
     "signature": ""
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "Niner Score",
+    "homeUrl": "https://www.neynar-card-craft.fun",
+    "iconUrl": "https://www.neynar-card-craft.fun/icon.png",
+    "splashImageUrl": "https://www.neynar-card-craft.fun/splash.png",
+    "splashBackgroundColor": "#000000",
+    "webhookUrl": "",
+    "subtitle": "Your Farcaster Reputation Score",
+    "description": "Get your free NFT identity card based on your Farcaster engagement score.",
+    "screenshotUrls": [],
+    "primaryCategory": "social",
+    "tags": ["farcaster", "nft", "social", "reputation"],
+    "heroImageUrl": "https://lovable.dev/opengraph-image-p98pqg.png",
+    "tagline": "Claim Your Social Identity",
+    "ogTitle": "Niner Score — Your Farcaster Reputation NFT",
+    "ogDescription": "Connect your Farcaster account and receive a unique NFT identity card.",
+    "ogImageUrl": "https://lovable.dev/opengraph-image-p98pqg.png",
+    "noindex": false
   }
 }
