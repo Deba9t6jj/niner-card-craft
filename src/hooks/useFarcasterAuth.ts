@@ -67,8 +67,9 @@ export function useFarcasterAuth() {
         throw new Error(lookupError.message || 'Failed to lookup user');
       }
 
-      if (!lookupData?.user?.fid) {
-        throw new Error('User not found on Farcaster');
+      // Handle user not found case
+      if (lookupData?.notFound || !lookupData?.user?.fid) {
+        throw new Error(lookupData?.message || `User "${cleanUsername}" not found on Farcaster`);
       }
 
       const fid = lookupData.user.fid;
