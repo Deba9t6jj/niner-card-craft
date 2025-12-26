@@ -5,6 +5,15 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+interface Transaction {
+  hash: string;
+  from: string;
+  to: string;
+  value: string;
+  timestamp: number;
+  type: 'send' | 'receive' | 'contract';
+}
+
 interface BaseActivityResponse {
   activity: {
     balance: string;
@@ -12,19 +21,13 @@ interface BaseActivityResponse {
     transactionCount: number;
     nftCount: number;
     contractInteractions: number;
-    recentTransactions: Array<{
-      hash: string;
-      from: string;
-      to: string;
-      value: string;
-      timestamp: number;
-      type: 'send' | 'receive' | 'contract';
-    }>;
+    recentTransactions: Transaction[];
   };
   primaryWallet: string;
 }
 
-// Base RPC endpoint (public)
+// Basescan API endpoint
+const BASESCAN_API_URL = "https://api.basescan.org/api";
 const BASE_RPC_URL = "https://mainnet.base.org";
 
 async function rpcCall(method: string, params: unknown[]): Promise<unknown> {
@@ -50,52 +53,96 @@ async function getBalance(address: string): Promise<string> {
   return result as string;
 }
 
-async function getTransactionCount(address: string): Promise<number> {
-  const result = await rpcCall("eth_getTransactionCount", [address, "latest"]);
-  return parseInt(result as string, 16);
-}
-
-// Get recent transactions using eth_getLogs (limited approach without indexer)
-async function getRecentTransactions(address: string): Promise<Array<{
-  hash: string;
-  from: string;
-  to: string;
-  value: string;
-  timestamp: number;
-  type: 'send' | 'receive' | 'contract';
-}>> {
-  // For demo purposes, we'll return simulated transactions
-  // In production, you'd use Alchemy/Basescan API for transaction history
-  const txCount = await getTransactionCount(address);
-  const transactions = [];
-  
-  // Simulate recent transactions based on tx count
-  const now = Math.floor(Date.now() / 1000);
-  for (let i = 0; i < Math.min(txCount, 5); i++) {
-    transactions.push({
-      hash: `0x${Math.random().toString(16).slice(2)}${Math.random().toString(16).slice(2)}`,
-      from: address,
-      to: `0x${Math.random().toString(16).slice(2, 42)}`,
-      value: (Math.random() * 0.1).toFixed(6),
-      timestamp: now - (i * 86400), // Each tx 1 day apart
-      type: Math.random() > 0.5 ? 'send' : 'contract' as 'send' | 'contract',
+// Fetch real transactions from Basescan API
+async function getRealTransactions(
+  address: string, 
+  apiKey: string
+): Promise<{ transactions: Transaction[], txCount: number, contractInteractions: number }> {
+  try {
+    const url = `${BASESCAN_API_URL}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=50&sort=desc&apikey=${apiKey}`;
+    
+    console.log(`Fetching transactions from Basescan for ${address}`);
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (data.status !== "1" || !data.result || !Array.isArray(data.result)) {
+      console.log("No transactions found or API error:", data.message);
+      return { transactions: [], txCount: 0, contractInteractions: 0 };
+    }
+    
+    let contractInteractions = 0;
+    
+    const transactions: Transaction[] = data.result.slice(0, 10).map((tx: {
+      hash: string;
+      from: string;
+      to: string;
+      value: string;
+      timeStamp: string;
+      input: string;
+    }) => {
+      const isContract = tx.input && tx.input !== "0x";
+      if (isContract) contractInteractions++;
+      
+      return {
+        hash: tx.hash,
+        from: tx.from.toLowerCase(),
+        to: tx.to?.toLowerCase() || "",
+        value: (parseInt(tx.value) / 1e18).toFixed(6),
+        timestamp: parseInt(tx.timeStamp),
+        type: tx.from.toLowerCase() === address.toLowerCase() 
+          ? (isContract ? 'contract' : 'send') 
+          : 'receive' as 'send' | 'receive' | 'contract',
+      };
     });
+    
+    return { 
+      transactions, 
+      txCount: data.result.length, 
+      contractInteractions 
+    };
+  } catch (error) {
+    console.error("Error fetching transactions:", error);
+    return { transactions: [], txCount: 0, contractInteractions: 0 };
   }
-  
-  return transactions;
 }
 
-// Estimate NFT count (simplified - would need NFT indexer API for real count)
-async function estimateNftCount(address: string): Promise<number> {
-  // For demo: estimate based on tx count (more active wallets likely have more NFTs)
-  const txCount = await getTransactionCount(address);
-  return Math.floor(txCount / 10); // Rough estimate
-}
-
-// Estimate contract interactions
-async function estimateContractInteractions(address: string): Promise<number> {
-  const txCount = await getTransactionCount(address);
-  return Math.floor(txCount * 0.7); // Assume 70% are contract interactions
+// Fetch real NFT holdings from Basescan API
+async function getNftCount(address: string, apiKey: string): Promise<number> {
+  try {
+    // Get ERC-721 transfers to this address (NFTs received)
+    const url = `${BASESCAN_API_URL}?module=account&action=tokennfttx&address=${address}&page=1&offset=100&sort=desc&apikey=${apiKey}`;
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (data.status !== "1" || !data.result || !Array.isArray(data.result)) {
+      return 0;
+    }
+    
+    // Count unique NFTs owned (received - sent)
+    const nftBalance = new Map<string, number>();
+    
+    for (const tx of data.result) {
+      const key = `${tx.contractAddress}-${tx.tokenID}`;
+      if (tx.to.toLowerCase() === address.toLowerCase()) {
+        nftBalance.set(key, (nftBalance.get(key) || 0) + 1);
+      } else if (tx.from.toLowerCase() === address.toLowerCase()) {
+        nftBalance.set(key, (nftBalance.get(key) || 0) - 1);
+      }
+    }
+    
+    // Count NFTs with positive balance
+    let count = 0;
+    for (const balance of nftBalance.values()) {
+      if (balance > 0) count += balance;
+    }
+    
+    return count;
+  } catch (error) {
+    console.error("Error fetching NFT count:", error);
+    return 0;
+  }
 }
 
 serve(async (req) => {
@@ -114,6 +161,15 @@ serve(async (req) => {
       );
     }
 
+    const apiKey = Deno.env.get("BASESCAN_API_KEY");
+    if (!apiKey) {
+      console.error("BASESCAN_API_KEY not configured");
+      return new Response(
+        JSON.stringify({ error: "Basescan API key not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Use the first wallet as primary
     const primaryWallet = walletAddresses[0].toLowerCase();
     
@@ -124,39 +180,28 @@ serve(async (req) => {
     let totalTxCount = 0;
     let totalNftCount = 0;
     let totalContractInteractions = 0;
-    let allTransactions: Array<{
-      hash: string;
-      from: string;
-      to: string;
-      value: string;
-      timestamp: number;
-      type: 'send' | 'receive' | 'contract';
-    }> = [];
+    let allTransactions: Transaction[] = [];
 
     for (const address of walletAddresses) {
       try {
         const normalizedAddress = address.toLowerCase();
         
-        // Get balance
+        // Get balance from RPC
         const balanceHex = await getBalance(normalizedAddress);
         totalBalance += BigInt(balanceHex);
         
-        // Get transaction count
-        const txCount = await getTransactionCount(normalizedAddress);
+        // Get real transaction data from Basescan
+        const { transactions, txCount, contractInteractions } = await getRealTransactions(normalizedAddress, apiKey);
         totalTxCount += txCount;
+        totalContractInteractions += contractInteractions;
         
-        // Get NFT count estimate
-        const nftCount = await estimateNftCount(normalizedAddress);
+        // Get real NFT count from Basescan
+        const nftCount = await getNftCount(normalizedAddress, apiKey);
         totalNftCount += nftCount;
         
-        // Get contract interactions estimate
-        const contractCount = await estimateContractInteractions(normalizedAddress);
-        totalContractInteractions += contractCount;
-        
-        // Get recent transactions (only for primary wallet to avoid duplicates)
+        // Collect transactions (only for primary wallet to avoid duplicates)
         if (normalizedAddress === primaryWallet) {
-          const recentTxs = await getRecentTransactions(normalizedAddress);
-          allTransactions = recentTxs;
+          allTransactions = transactions;
         }
       } catch (walletError) {
         console.error(`Error fetching data for wallet ${address}:`, walletError);
@@ -180,6 +225,7 @@ serve(async (req) => {
     };
 
     console.log(`Base activity fetched successfully for ${primaryWallet}`);
+    console.log(`Balance: ${balanceEth} ETH, Txs: ${totalTxCount}, NFTs: ${totalNftCount}`);
 
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
