@@ -13,7 +13,7 @@ const queryClient = new QueryClient();
 
 const App = () => {
   useEffect(() => {
-    // Simple solution for Base Mini App - SDK ছাড়াই
+    // Simple solution for Base Mini App - SDK ছাড়াই
     const initializeForBase = async () => {
       console.log("🚀 Niner Score Mini App loading for Base...");
       
@@ -37,9 +37,10 @@ const App = () => {
       }
       
       // Method 2: Try to use SDK if available
-      if (typeof window !== 'undefined' && window.sdk) {
+      const win = window as Window & { sdk?: { actions: { ready: () => Promise<void> } } };
+      if (typeof window !== 'undefined' && win.sdk) {
         try {
-          await window.sdk.actions.ready();
+          await win.sdk.actions.ready();
           console.log("✅ SDK ready() called successfully");
         } catch (sdkError) {
           console.log("ℹ️ SDK not available, using fallback");

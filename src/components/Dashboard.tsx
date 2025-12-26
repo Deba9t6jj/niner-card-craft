@@ -4,10 +4,14 @@ import NinerCard from "./NinerCard";
 import ScoreDisplay from "./ScoreDisplay";
 import StatsGrid from "./StatsGrid";
 import { MintNFTButton } from "./MintNFTButton";
+import { BaseScorePanel } from "./base/BaseScorePanel";
+import { CombinedScoreCard, type CombinedTierType } from "./base/CombinedScoreCard";
+import { BaseTransactions } from "./base/BaseTransactions";
 import { Share2, Download, LogOut, Sparkles, MessageCircle, Trophy, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { TierType } from "./NinerCard";
 import type { FarcasterData } from "@/hooks/useFarcasterAuth";
+import { useBaseScore } from "@/hooks/useBaseScore";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,17 +30,32 @@ const getTier = (score: number): TierType => {
   return "bronze";
 };
 
+const getCombinedTier = (combinedScore: number): CombinedTierType => {
+  if (combinedScore >= 900) return "diamond-pro";
+  if (combinedScore >= 801) return "diamond";
+  if (combinedScore >= 501) return "gold";
+  if (combinedScore >= 251) return "silver";
+  return "bronze";
+};
+
 const tierThresholds = [
   { tier: "Bronze", min: 0, max: 250, color: "hsl(30 60% 50%)" },
   { tier: "Silver", min: 251, max: 500, color: "hsl(220 15% 70%)" },
   { tier: "Gold", min: 501, max: 800, color: "hsl(45 100% 55%)" },
-  { tier: "Diamond", min: 801, max: 999, color: "hsl(200 100% 70%)" },
+  { tier: "Diamond", min: 801, max: 899, color: "hsl(200 100% 70%)" },
+  { tier: "Diamond Pro", min: 900, max: 1000, color: "hsl(220 90% 60%)" },
 ];
 
 export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: DashboardProps) => {
   const { user, activity, ninerScore } = data;
   const tier = getTier(ninerScore);
   const { toast } = useToast();
+  const { baseData, isLoading: baseLoading, fetchBaseScore } = useBaseScore();
+
+  // Calculate combined score
+  const baseScore = baseData?.score || 0;
+  const combinedScore = Math.round((ninerScore * 0.7) + (baseScore * 0.3));
+  const combinedTier = getCombinedTier(combinedScore);
 
   // Map activity to stats format
   const stats = {
@@ -49,6 +68,13 @@ export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: Dashb
       ? Math.round((activity.totalLikes + activity.totalRecasts) / Math.max(activity.totalCasts, 1) * 10) / 10
       : 0,
   };
+
+  // Fetch Base activity if user has verified addresses
+  useEffect(() => {
+    if (user.verifiedAddresses && user.verifiedAddresses.length > 0) {
+      fetchBaseScore(user.verifiedAddresses);
+    }
+  }, [user.verifiedAddresses, fetchBaseScore]);
   
   // Save to leaderboard on mount - only sends FID and username
   // Score is calculated server-side for security

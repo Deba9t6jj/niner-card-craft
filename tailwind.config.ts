@@ -56,6 +56,11 @@ export default {
           silver: "hsl(var(--tier-silver))",
           gold: "hsl(var(--tier-gold))",
           diamond: "hsl(var(--tier-diamond))",
+          "diamond-pro": "hsl(var(--tier-diamond-pro))",
+        },
+        base: {
+          DEFAULT: "hsl(var(--base))",
+          glow: "hsl(var(--base-glow))",
         },
         farcaster: {
           DEFAULT: "hsl(var(--farcaster))",
