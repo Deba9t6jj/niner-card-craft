@@ -509,10 +509,31 @@ export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: Dashb
                 transition={{ delay: 0.4 }}
                 className="font-display font-bold text-lg mb-4"
               >
-                Activity Breakdown
+                Farcaster Activity
               </motion.h3>
               <StatsGrid stats={stats} />
             </div>
+
+            {/* Combined Score Card */}
+            <CombinedScoreCard
+              farcasterScore={ninerScore}
+              baseScore={baseScore}
+              combinedScore={combinedScore}
+              tier={combinedTier}
+              isLoading={baseLoading}
+            />
+
+            {/* Base Chain Activity */}
+            <BaseScorePanel
+              activity={baseData?.activity || null}
+              score={baseScore}
+              isLoading={baseLoading}
+            />
+
+            {/* Base Transactions */}
+            {baseData?.activity?.recentTransactions && baseData.activity.recentTransactions.length > 0 && (
+              <BaseTransactions transactions={baseData.activity.recentTransactions} />
+            )}
 
             {/* Bio if available */}
             {user.bio && (

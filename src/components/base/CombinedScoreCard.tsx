@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { TrendingUp, Zap } from 'lucide-react';
+import { TrendingUp, Zap, Loader2 } from 'lucide-react';
 
 export type CombinedTierType = 'bronze' | 'silver' | 'gold' | 'diamond' | 'diamond-pro';
 
@@ -8,6 +8,7 @@ interface CombinedScoreCardProps {
   baseScore: number;
   combinedScore: number;
   tier: CombinedTierType;
+  isLoading?: boolean;
 }
 
 const tierConfig: Record<CombinedTierType, { color: string; label: string; glow: string }> = {
@@ -22,7 +23,8 @@ export const CombinedScoreCard = ({
   farcasterScore, 
   baseScore, 
   combinedScore, 
-  tier 
+  tier,
+  isLoading = false,
 }: CombinedScoreCardProps) => {
   const config = tierConfig[tier];
   const farcasterPercent = (farcasterScore / 1000) * 100;
@@ -99,18 +101,24 @@ export const CombinedScoreCard = ({
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-md bg-base/20 flex items-center justify-center">
-                <svg className="w-3 h-3 text-base" viewBox="0 0 111 111" fill="currentColor">
-                  <path d="M54.921 110.034C85.359 110.034 110.034 85.359 110.034 54.921C110.034 24.483 85.359 -0.192 54.921 -0.192C24.483 -0.192 -0.192 24.483 -0.192 54.921C-0.192 85.359 24.483 110.034 54.921 110.034Z" />
-                </svg>
+                {isLoading ? (
+                  <Loader2 className="w-3 h-3 text-base animate-spin" />
+                ) : (
+                  <svg className="w-3 h-3 text-base" viewBox="0 0 111 111" fill="currentColor">
+                    <path d="M54.921 110.034C85.359 110.034 110.034 85.359 110.034 54.921C110.034 24.483 85.359 -0.192 54.921 -0.192C24.483 -0.192 -0.192 24.483 -0.192 54.921C-0.192 85.359 24.483 110.034 54.921 110.034Z" />
+                  </svg>
+                )}
               </div>
               <span className="text-sm text-muted-foreground">Base (30%)</span>
             </div>
-            <span className="font-display font-bold text-base">{baseScore}</span>
+            <span className="font-display font-bold text-base">
+              {isLoading ? '...' : baseScore}
+            </span>
           </div>
           <div className="h-2 bg-muted rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: `${basePercent}%` }}
+              animate={{ width: isLoading ? '0%' : `${basePercent}%` }}
               transition={{ duration: 1, delay: 0.4 }}
               className="h-full bg-base rounded-full"
               style={{ boxShadow: '0 0 10px hsl(220 90% 55% / 0.5)' }}
