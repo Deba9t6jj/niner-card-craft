@@ -93,7 +93,7 @@ const Index = () => {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-5 gap-5">
             {[
               {
                 tier: "Bronze",
@@ -101,6 +101,7 @@ const Index = () => {
                 color: "card-bronze",
                 glow: "glow-bronze",
                 perks: ["Basic NFT Card", "Profile Badge", "Community Access"],
+                basePerks: ["Gas fee rebates"],
               },
               {
                 tier: "Silver",
@@ -108,6 +109,7 @@ const Index = () => {
                 color: "card-silver",
                 glow: "glow-silver",
                 perks: ["Animated Card", "Silver Badge", "Early Access"],
+                basePerks: ["Priority transactions", "5% fee discount"],
               },
               {
                 tier: "Gold",
@@ -115,13 +117,24 @@ const Index = () => {
                 color: "card-gold",
                 glow: "glow-gold",
                 perks: ["Holographic Card", "Gold Badge", "Exclusive Drops"],
+                basePerks: ["Free gas days", "10% fee discount", "Beta access"],
               },
               {
                 tier: "Diamond",
-                range: "801+",
+                range: "801-899",
                 color: "card-diamond",
                 glow: "glow-diamond",
                 perks: ["Legendary Card", "Diamond Badge", "VIP Perks"],
+                basePerks: ["Priority support", "15% fee discount", "Airdrop eligibility"],
+              },
+              {
+                tier: "Diamond Pro",
+                range: "900+",
+                color: "bg-gradient-to-br from-base/30 to-base-glow/20 border border-base/50",
+                glow: "shadow-[0_0_30px_hsl(220_90%_60%/0.3)]",
+                perks: ["Elite Card", "Pro Badge", "Governance Rights"],
+                basePerks: ["Max gas rebates", "20% fee discount", "Exclusive NFT drops", "Whale perks"],
+                isBasePro: true,
               },
             ].map((item, index) => (
               <motion.div
@@ -130,21 +143,52 @@ const Index = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className={`relative rounded-2xl p-6 ${item.color} ${item.glow} holographic`}
+                className={`relative rounded-2xl p-5 ${item.color} ${item.glow} holographic`}
               >
                 <div className="relative z-10">
-                  <h3 className="font-display font-bold text-2xl text-foreground mb-1">
+                  {item.isBasePro && (
+                    <div className="flex items-center gap-1.5 mb-2 px-2 py-1 rounded-full bg-base/30 border border-base/50 w-fit">
+                      <svg className="w-3 h-3 text-base" viewBox="0 0 111 111" fill="currentColor">
+                        <path d="M54.921 110.034C85.359 110.034 110.034 85.359 110.034 54.921C110.034 24.483 85.359 -0.192 54.921 -0.192C24.483 -0.192 -0.192 24.483 -0.192 54.921C-0.192 85.359 24.483 110.034 54.921 110.034Z" />
+                      </svg>
+                      <span className="text-[10px] font-bold text-base uppercase">Base Pro</span>
+                    </div>
+                  )}
+                  <h3 className="font-display font-bold text-xl text-foreground mb-1">
                     {item.tier}
                   </h3>
-                  <p className="text-sm text-foreground/70 mb-4">{item.range} pts</p>
-                  <ul className="space-y-2">
-                    {item.perks.map((perk) => (
-                      <li key={perk} className="text-sm text-foreground/80 flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-foreground/60" />
-                        {perk}
-                      </li>
-                    ))}
-                  </ul>
+                  <p className="text-xs text-foreground/70 mb-3">{item.range} pts</p>
+                  
+                  {/* Social Perks */}
+                  <div className="mb-3">
+                    <p className="text-[10px] uppercase tracking-wide text-foreground/50 mb-1.5">Social Perks</p>
+                    <ul className="space-y-1">
+                      {item.perks.map((perk) => (
+                        <li key={perk} className="text-xs text-foreground/80 flex items-center gap-1.5">
+                          <span className="w-1 h-1 rounded-full bg-farcaster" />
+                          {perk}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  
+                  {/* Base Perks */}
+                  <div className="pt-3 border-t border-foreground/10">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <svg className="w-3 h-3 text-base" viewBox="0 0 111 111" fill="currentColor">
+                        <path d="M54.921 110.034C85.359 110.034 110.034 85.359 110.034 54.921C110.034 24.483 85.359 -0.192 54.921 -0.192C24.483 -0.192 -0.192 24.483 -0.192 54.921C-0.192 85.359 24.483 110.034 54.921 110.034Z" />
+                      </svg>
+                      <p className="text-[10px] uppercase tracking-wide text-base">Base Perks</p>
+                    </div>
+                    <ul className="space-y-1">
+                      {item.basePerks.map((perk) => (
+                        <li key={perk} className="text-xs text-foreground/80 flex items-center gap-1.5">
+                          <span className="w-1 h-1 rounded-full bg-base" />
+                          {perk}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               </motion.div>
             ))}
