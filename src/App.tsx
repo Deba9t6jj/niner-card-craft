@@ -15,9 +15,8 @@ const App = () => {
   useEffect(() => {
     const initializeSdk = async () => {
       try {
-        await sdk.initialize();
         await sdk.actions.ready();
-        console.log("✅ Mini App SDK initialized and ready!");
+        console.log("✅ Mini App SDK ready!");
       } catch (error) {
         console.error("❌ Failed to initialize SDK:", error);
       }
