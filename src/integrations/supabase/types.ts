@@ -17,7 +17,9 @@ export type Database = {
       leaderboard: {
         Row: {
           avatar_url: string | null
+          base_score: number | null
           casts: number | null
+          combined_score: number | null
           created_at: string
           display_name: string | null
           engagement: number | null
@@ -31,10 +33,13 @@ export type Database = {
           tier: string
           updated_at: string
           username: string
+          wallet_addresses: string[] | null
         }
         Insert: {
           avatar_url?: string | null
+          base_score?: number | null
           casts?: number | null
+          combined_score?: number | null
           created_at?: string
           display_name?: string | null
           engagement?: number | null
@@ -48,10 +53,13 @@ export type Database = {
           tier?: string
           updated_at?: string
           username: string
+          wallet_addresses?: string[] | null
         }
         Update: {
           avatar_url?: string | null
+          base_score?: number | null
           casts?: number | null
+          combined_score?: number | null
           created_at?: string
           display_name?: string | null
           engagement?: number | null
@@ -65,6 +73,7 @@ export type Database = {
           tier?: string
           updated_at?: string
           username?: string
+          wallet_addresses?: string[] | null
         }
         Relationships: []
       }
