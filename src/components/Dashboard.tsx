@@ -7,13 +7,14 @@ import { MintNFTButton } from "./MintNFTButton";
 import { BaseScorePanel } from "./base/BaseScorePanel";
 import { CombinedScoreCard, type CombinedTierType } from "./base/CombinedScoreCard";
 import { BaseTransactions } from "./base/BaseTransactions";
+import { WalletConnector } from "./base/WalletConnector";
 import { Share2, Download, LogOut, Sparkles, MessageCircle, Trophy, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { TierType } from "./NinerCard";
 import type { FarcasterData } from "@/hooks/useFarcasterAuth";
 import { useBaseScore } from "@/hooks/useBaseScore";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface DashboardProps {
@@ -51,6 +52,10 @@ export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: Dashb
   const tier = getTier(ninerScore);
   const { toast } = useToast();
   const { baseData, isLoading: baseLoading, fetchBaseScore } = useBaseScore();
+  const [manualWallets, setManualWallets] = useState<string[]>([]);
+
+  // Combine verified addresses with manually added wallets
+  const allWallets = [...(user.verifiedAddresses || []), ...manualWallets];
 
   // Calculate combined score
   const baseScore = baseData?.score || 0;
@@ -69,12 +74,35 @@ export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: Dashb
       : 0,
   };
 
-  // Fetch Base activity if user has verified addresses
+  // Fetch Base activity if user has verified addresses or manual wallets
   useEffect(() => {
-    if (user.verifiedAddresses && user.verifiedAddresses.length > 0) {
-      fetchBaseScore(user.verifiedAddresses);
+    if (allWallets.length > 0) {
+      fetchBaseScore(allWallets);
     }
-  }, [user.verifiedAddresses, fetchBaseScore]);
+  }, [allWallets.length, fetchBaseScore]);
+
+  // Cache Base score when it's calculated
+  useEffect(() => {
+    if (baseScore > 0 && user.fid) {
+      supabase.functions.invoke('cache-base-score', {
+        body: {
+          fid: user.fid,
+          baseScore,
+          walletAddresses: allWallets,
+        },
+      }).catch(console.error);
+    }
+  }, [baseScore, user.fid, allWallets]);
+
+  // Handle adding a manual wallet
+  const handleAddWallet = useCallback(async (address: string) => {
+    setManualWallets(prev => [...prev, address]);
+  }, []);
+
+  // Handle removing a manual wallet
+  const handleRemoveWallet = useCallback((address: string) => {
+    setManualWallets(prev => prev.filter(w => w.toLowerCase() !== address.toLowerCase()));
+  }, []);
   
   // Save to leaderboard on mount - only sends FID and username
   // Score is calculated server-side for security
@@ -527,6 +555,14 @@ export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: Dashb
             <BaseScorePanel
               activity={baseData?.activity || null}
               score={baseScore}
+              isLoading={baseLoading}
+            />
+
+            {/* Wallet Connector */}
+            <WalletConnector
+              verifiedAddresses={allWallets}
+              onAddWallet={handleAddWallet}
+              onRemoveWallet={handleRemoveWallet}
               isLoading={baseLoading}
             />
 
