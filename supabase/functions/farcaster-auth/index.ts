@@ -63,74 +63,17 @@ serve(async (req) => {
         }
       );
 
-      // If not found, try search endpoint (works better for ENS names)
+      // If not found, return user not found with 200 status (so client can show proper message)
       if (response.status === 404) {
-        console.log('Username not found directly, trying search endpoint...');
-        
-        // Try multiple search variations
-        const searchQueries = [
-          cleanUsername,
-          cleanUsername.endsWith('.eth') ? cleanUsername.slice(0, -4) : cleanUsername,
-        ];
-        
-        for (const searchQuery of searchQueries) {
-          console.log('Searching with query:', searchQuery);
-          
-          const searchResponse = await fetch(
-            `https://api.neynar.com/v2/farcaster/user/search?q=${encodeURIComponent(searchQuery)}&limit=10`,
-            {
-              headers: {
-                'accept': 'application/json',
-                'x-api-key': NEYNAR_API_KEY,
-              },
-            }
-          );
-
-          if (searchResponse.ok) {
-            const searchData = await searchResponse.json();
-            const users = searchData.result?.users || [];
-            console.log('Search returned', users.length, 'users. First few:', users.slice(0, 3).map((u: any) => u.username));
-            
-            if (users.length > 0) {
-              // Try to find a matching user (flexible matching)
-              const matchedUser = users.find((u: any) => {
-                const uname = u.username?.toLowerCase() || '';
-                const dname = u.display_name?.toLowerCase() || '';
-                return uname === cleanUsername || 
-                       dname === cleanUsername ||
-                       uname === searchQuery ||
-                       dname === searchQuery;
-              });
-              
-              if (matchedUser) {
-                console.log('Found exact match:', matchedUser.username);
-                return new Response(JSON.stringify({ user: matchedUser }), {
-                  headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                });
-              } else {
-                // Return first result if it contains the search query
-                const firstUser = users[0];
-                if (firstUser.username?.toLowerCase().includes(searchQuery) || 
-                    firstUser.display_name?.toLowerCase().includes(searchQuery)) {
-                  console.log('Using closest match:', firstUser.username);
-                  return new Response(JSON.stringify({ user: firstUser }), {
-                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                  });
-                }
-              }
-            }
-          } else {
-            const errorText = await searchResponse.text();
-            console.error('Search API error:', searchResponse.status, errorText);
-          }
-        }
-
-        // If all searches fail, return user not found
-        console.log('User not found via any search method');
+        console.log('Username not found on Farcaster:', cleanUsername);
         return new Response(
-          JSON.stringify({ error: 'User not found. Try your Farcaster username without .eth suffix (e.g., use "asmirim" instead of "asmirim.eth")' }),
+          JSON.stringify({ 
+            user: null, 
+            notFound: true,
+            message: `User "${cleanUsername}" not found on Farcaster. Please check the username and try again.`
+          }),
           { 
-            status: 404, 
+            status: 200, 
             headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
           }
         );
