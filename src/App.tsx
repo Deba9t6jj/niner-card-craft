@@ -1,72 +1,48 @@
-import { useEffect } from "react";
+import { useEffect } from 'react';
+import { sdk } from '@farcaster/miniapp-sdk';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { WalletProvider } from "@/components/WalletProvider";
 import Index from "./pages/Index";
-import Leaderboard from "./pages/Leaderboard";
-import NotFound from "./pages/NotFound";
+import Layout from "./pages/Layout";
+import Cards from "./pages/Cards";
 
 const queryClient = new QueryClient();
 
 const App = () => {
   useEffect(() => {
-    // Simple solution for Base Mini App - SDK ছাড়াই
-    const initializeForBase = async () => {
-      console.log("🚀 Niner Score Mini App loading for Base...");
-      
-      // Method 1: Check if we're in Base app (iframe)
-      if (window.parent !== window) {
-        console.log("📱 Running inside Base app iframe");
-        
-        // Send ready signal to Base
-        setTimeout(() => {
-          try {
-            window.parent.postMessage({
-              type: 'farcaster:ready',
-              ready: true,
-              version: '1.0.0'
-            }, '*');
-            console.log("✅ Ready signal sent to Base app");
-          } catch (e) {
-            console.log("⚠️ Could not send ready signal, continuing anyway");
-          }
-        }, 500);
-      }
-      
-      // Method 2: Try to use SDK if available
-      const win = window as Window & { sdk?: { actions: { ready: () => Promise<void> } } };
-      if (typeof window !== 'undefined' && win.sdk) {
-        try {
-          await win.sdk.actions.ready();
-          console.log("✅ SDK ready() called successfully");
-        } catch (sdkError) {
-          console.log("ℹ️ SDK not available, using fallback");
-        }
+    const initializeSdk = async () => {
+      try {
+        // Initialize the SDK
+        await sdk.initialize();
+        // Tell Base app that our app is ready to be displayed
+        await sdk.actions.ready();
+        console.log("✅ Mini App SDK initialized and ready!");
+      } catch (error) {
+        console.error("❌ Failed to initialize SDK:", error);
       }
     };
-    
-    initializeForBase();
+
+    initializeSdk();
   }, []);
 
   return (
-    <WalletProvider>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/leaderboard" element={<Leaderboard />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </WalletProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Index />} />
+              <Route path="cards" element={<Cards />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 };
 
