@@ -1,13 +1,12 @@
 import { motion } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Trophy, Compass, User } from "lucide-react";
+import { LayoutDashboard, Trophy, Compass } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard },
   { path: "/leaderboard", label: "Leaderboard", icon: Trophy },
-  // { path: "/explore", label: "Explore", icon: Compass },
-  // { path: "/profile", label: "Profile", icon: User },
+  { path: "/explore", label: "Explore", icon: Compass },
 ];
 
 interface StickyNavProps {

@@ -10,13 +10,15 @@ import { CombinedScoreCard, type CombinedTierType } from "./base/CombinedScoreCa
 import { BaseTransactions } from "./base/BaseTransactions";
 import { WalletConnector } from "./base/WalletConnector";
 import { ScoreBreakdownTooltip } from "./ScoreBreakdownTooltip";
+import { StreakBadge, StreakDisplay } from "./StreakBadge";
+import { useTierCelebration } from "./TierConfetti";
 import { Share2, Download, LogOut, Sparkles, MessageCircle, Trophy, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { TierType } from "./NinerCard";
 import type { FarcasterData } from "@/hooks/useFarcasterAuth";
 import { useBaseScore } from "@/hooks/useBaseScore";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface DashboardProps {
@@ -55,6 +57,11 @@ export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: Dashb
   const { toast } = useToast();
   const { baseData, isLoading: baseLoading, fetchBaseScore } = useBaseScore();
   const [manualWallets, setManualWallets] = useState<string[]>([]);
+  const { triggerConfetti } = useTierCelebration(tier);
+  const previousTierRef = useRef<string | null>(null);
+  
+  // Mock streak days - in production this would come from activity data
+  const streakDays = Math.min(30, Math.floor(activity.totalCasts / 10));
 
   // Combine verified addresses with manually added wallets
   const allWallets = [...(user.verifiedAddresses || []), ...manualWallets];
@@ -123,6 +130,24 @@ export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: Dashb
     };
     saveToLeaderboard();
   }, [user.fid]);
+
+  // Tier celebration effect
+  useEffect(() => {
+    if (previousTierRef.current && previousTierRef.current !== tier) {
+      const tierOrder = ["bronze", "silver", "gold", "diamond"];
+      const prevIndex = tierOrder.indexOf(previousTierRef.current);
+      const currentIndex = tierOrder.indexOf(tier);
+      
+      if (currentIndex > prevIndex) {
+        triggerConfetti(tier);
+        toast({
+          title: `🎉 Tier Upgrade!`,
+          description: `Congratulations! You've reached ${tier.toUpperCase()} tier!`,
+        });
+      }
+    }
+    previousTierRef.current = tier;
+  }, [tier, triggerConfetti, toast]);
 
   const handleShare = () => {
     navigator.clipboard.writeText(`🎯 My Niner Score: ${ninerScore} (${tier.toUpperCase()} Tier)\n\nCheck your Farcaster reputation at ninerscore.app`);
@@ -500,14 +525,15 @@ export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: Dashb
               )}
             </div>
 
-            {/* Score display with breakdown tooltip */}
+            {/* Score display with breakdown tooltip and streak */}
             <div className="flex flex-col items-center lg:items-start gap-2">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <span className="text-sm text-muted-foreground">Your Score</span>
                 <ScoreBreakdownTooltip 
                   stats={stats} 
                   totalScore={ninerScore} 
                 />
+                {streakDays >= 1 && <StreakBadge streakDays={streakDays} />}
               </div>
               <ScoreDisplay score={ninerScore} tier={tier} />
             </div>
@@ -542,6 +568,9 @@ export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: Dashb
                 </div>
               </motion.div>
             )}
+
+            {/* Streak Display */}
+            {streakDays >= 1 && <StreakDisplay streakDays={streakDays} />}
 
             {/* Stats grid */}
             <div>
