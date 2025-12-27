@@ -7,20 +7,18 @@
   "miniapp": {
     "version": "1",
     "name": "Niner Score",
-    "homeUrl": "https://www.neynar-card-craft.fun/",
-    "iconUrl": "https://www.neynar-card-craft.fun/logo.png",
+    "homeUrl": "https://www.neynar-card-craft.fun",
+    "iconUrl": "https://www.neynar-card-craft.fun/icon.png",
     "splashImageUrl": "https://www.neynar-card-craft.fun/splash.png",
-    "splashBackgroundColor": "#000000",
-    "webhookUrl": "",
+    "splashBackgroundColor": "#0a0a0f",
     "subtitle": "Your Farcaster Reputation NFT",
-    "description": "Connect your Farcaster account and receive a unique NFT identity card based on your social reputation. Higher scores unlock better tiers.",
+    "description": "Connect your Farcaster account and receive a unique NFT identity card based on your social reputation. Higher scores unlock better tiers — Bronze, Silver, Gold, or Diamond.",
     "screenshotUrls": [
-      "https://www.neynar-card-craft.fun/screenshot1.png",
-      "https://www.neynar-card-craft.fun/screenshot2.png"
+      "https://www.neynar-card-craft.fun/screenshot1.png"
     ],
     "primaryCategory": "social",
-    "tags": ["farcaster", "nft", "social", "reputation", "identity"],
-    "heroImageUrl": "https://www.neynar-card-craft.fun/hero.png",
+    "tags": ["farcaster", "nft", "social", "reputation", "identity", "base"],
+    "heroImageUrl": "https://www.neynar-card-craft.fun/og-image.png",
     "tagline": "Claim Your Social Identity",
     "ogTitle": "Niner Score — Your Farcaster Reputation NFT",
     "ogDescription": "Free NFT Identity Cards for Farcaster based on your social reputation score.",
