@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useConnect, useAccount, useDisconnect, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 import { parseEther } from 'viem';
@@ -24,7 +24,13 @@ interface MintNFTButtonProps {
   };
 }
 
-export function MintNFTButton({ fid, username, displayName, score, tier, avatarUrl, stats }: MintNFTButtonProps) {
+export interface MintNFTButtonHandle {
+  triggerMint: () => void;
+  triggerConnect: () => void;
+}
+
+export const MintNFTButton = forwardRef<MintNFTButtonHandle, MintNFTButtonProps>(
+  ({ fid, username, displayName, score, tier, avatarUrl, stats }, ref) => {
   const { toast } = useToast();
   const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount();
   const { connect, isPending: isConnecting } = useConnect();
@@ -45,6 +51,7 @@ export function MintNFTButton({ fid, username, displayName, score, tier, avatarU
   const activeAddress = miniAppWallet.address || wagmiAddress;
   const isWalletConnected = miniAppWallet.isConnected || wagmiConnected;
   const isMiniApp = miniAppWallet.isMiniApp;
+
 
   const handleConnect = async () => {
     try {
@@ -142,6 +149,20 @@ export function MintNFTButton({ fid, username, displayName, score, tier, avatarU
     }
   };
 
+  // Expose methods to parent via ref
+  useImperativeHandle(ref, () => ({
+    triggerMint: () => {
+      if (isWalletConnected && !txHash) {
+        handleMint();
+      }
+    },
+    triggerConnect: () => {
+      if (!isWalletConnected) {
+        handleConnect();
+      }
+    },
+  }), [isWalletConnected, txHash]);
+
   if (txHash) {
     return (
       <div className="flex flex-col items-center gap-2">
@@ -213,4 +234,6 @@ export function MintNFTButton({ fid, username, displayName, score, tier, avatarU
       </div>
     </div>
   );
-}
+});
+
+MintNFTButton.displayName = 'MintNFTButton';

@@ -6,6 +6,9 @@ import { StickyNav } from "@/components/StickyNav";
 import { DashboardSkeleton } from "@/components/Skeletons";
 import { StreakDisplay } from "@/components/StreakBadge";
 import { Button } from "@/components/ui/button";
+import { usePrimaryButton } from "@/hooks/usePrimaryButton";
+import { useMiniApp } from "@/contexts/MiniAppContext";
+import { sdk } from "@farcaster/miniapp-sdk";
 import { 
   ArrowLeft, 
   Crown, 
@@ -112,12 +115,45 @@ const Profile = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  
+  // Primary button hook for Mini App
+  const { setPrimaryButton, hidePrimaryButton } = usePrimaryButton();
+  const { isMiniApp } = useMiniApp();
 
   useEffect(() => {
     if (username) {
       fetchUser();
     }
   }, [username]);
+
+  // Set up primary button for profile sharing
+  useEffect(() => {
+    if (user && isMiniApp) {
+      setPrimaryButton(
+        { text: `📤 Share ${user.display_name || user.username}'s Profile` },
+        async () => {
+          try {
+            // Use SDK's composeCast for sharing
+            const castText = `Check out @${user.username}'s Niner Score!\n\n` +
+              `🎯 Score: ${user.score} (${user.tier?.toUpperCase() || 'BRONZE'})\n` +
+              `👥 Followers: ${user.followers?.toLocaleString() || 0}\n` +
+              `📝 Casts: ${user.casts?.toLocaleString() || 0}\n\n` +
+              `https://www.neynar-card-craft.fun/profile/${user.username}`;
+            
+            await sdk.actions.openUrl(`https://warpcast.com/~/compose?text=${encodeURIComponent(castText)}`);
+          } catch (error) {
+            // Fallback to clipboard
+            navigator.clipboard.writeText(`https://www.neynar-card-craft.fun/profile/${user.username}`);
+            toast.success('Profile link copied!');
+          }
+        }
+      );
+    }
+
+    return () => {
+      hidePrimaryButton();
+    };
+  }, [user, isMiniApp, setPrimaryButton, hidePrimaryButton]);
 
   const fetchUser = async () => {
     try {
