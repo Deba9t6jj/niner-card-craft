@@ -57,67 +57,69 @@ const tierIcons: Record<string, React.ReactNode> = {
 };
 
 const UserCard = ({ user, rank }: { user: UserEntry; rank?: number }) => (
-  <motion.div
-    whileHover={{ scale: 1.02, y: -2 }}
-    className="relative bg-card/50 backdrop-blur-sm border border-border rounded-xl p-4 hover:border-primary/30 transition-all cursor-pointer group"
-  >
-    {rank && (
-      <div className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-primary flex items-center justify-center text-xs font-bold">
-        {rank}
-      </div>
-    )}
-    
-    <div className="flex items-center gap-3">
-      {user.avatar_url ? (
-        <img 
-          src={user.avatar_url} 
-          alt={user.display_name || user.username}
-          className="w-12 h-12 rounded-full border-2 object-cover"
-          style={{ borderColor: tierColors[user.tier] }}
-        />
-      ) : (
+  <Link to={`/profile/${user.username}`}>
+    <motion.div
+      whileHover={{ scale: 1.02, y: -2 }}
+      className="relative bg-card/50 backdrop-blur-sm border border-border rounded-xl p-4 hover:border-primary/30 transition-all cursor-pointer group"
+    >
+      {rank && (
+        <div className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-primary flex items-center justify-center text-xs font-bold">
+          {rank}
+        </div>
+      )}
+      
+      <div className="flex items-center gap-3">
+        {user.avatar_url ? (
+          <img 
+            src={user.avatar_url} 
+            alt={user.display_name || user.username}
+            className="w-12 h-12 rounded-full border-2 object-cover"
+            style={{ borderColor: tierColors[user.tier] }}
+          />
+        ) : (
+          <div 
+            className="w-12 h-12 rounded-full border-2 bg-muted flex items-center justify-center"
+            style={{ borderColor: tierColors[user.tier] }}
+          >
+            <span className="font-bold">{user.username[0].toUpperCase()}</span>
+          </div>
+        )}
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className="font-display font-bold text-sm truncate group-hover:text-primary transition-colors">
+              {user.display_name || user.username}
+            </span>
+            {tierIcons[user.tier]}
+          </div>
+          <span className="text-xs text-muted-foreground">@{user.username}</span>
+        </div>
+        
         <div 
-          className="w-12 h-12 rounded-full border-2 bg-muted flex items-center justify-center"
-          style={{ borderColor: tierColors[user.tier] }}
+          className="px-3 py-1.5 rounded-lg text-right"
+          style={{ 
+            backgroundColor: `${tierColors[user.tier]}20`,
+          }}
         >
-          <span className="font-bold">{user.username[0].toUpperCase()}</span>
-        </div>
-      )}
-      
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
-          <span className="font-display font-bold text-sm truncate group-hover:text-primary transition-colors">
-            {user.display_name || user.username}
+          <span 
+            className="font-display font-black text-lg"
+            style={{ color: tierColors[user.tier] }}
+          >
+            {user.score}
           </span>
-          {tierIcons[user.tier]}
         </div>
-        <span className="text-xs text-muted-foreground">@{user.username}</span>
       </div>
       
-      <div 
-        className="px-3 py-1.5 rounded-lg text-right"
-        style={{ 
-          backgroundColor: `${tierColors[user.tier]}20`,
-        }}
-      >
-        <span 
-          className="font-display font-black text-lg"
-          style={{ color: tierColors[user.tier] }}
-        >
-          {user.score}
-        </span>
+      {/* Stats row */}
+      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/50 text-xs text-muted-foreground">
+        <span>{user.casts?.toLocaleString() || 0} casts</span>
+        <span>{user.followers?.toLocaleString() || 0} followers</span>
+        {user.base_score && user.base_score > 0 && (
+          <span className="text-base">Base: {user.base_score}</span>
+        )}
       </div>
-    </div>
-    
-    {/* Stats row */}
-    <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/50 text-xs text-muted-foreground">
-      <span>{user.casts?.toLocaleString() || 0} casts</span>
-      <span>{user.followers?.toLocaleString() || 0} followers</span>
-      {user.base_score && user.base_score > 0 && (
-        <span className="text-base">Base: {user.base_score}</span>
-      )}
-    </div>
-  </motion.div>
+    </motion.div>
+  </Link>
 );
 
 const CategoryGrid = ({ section }: { section: CategorySection }) => (

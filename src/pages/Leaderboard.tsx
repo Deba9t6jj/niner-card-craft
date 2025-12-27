@@ -238,134 +238,136 @@ const Leaderboard = () => {
               
               return (
                 <TiltLeaderboardCard key={entry.id} isTop3={isTop3} tierColor={tierColors[entry.tier]}>
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.03 }}
-                    whileHover={{ 
-                      borderColor: tierColors[entry.tier] + '60',
-                      transition: { duration: 0.2 }
-                    }}
-                    className={`relative bg-card/50 backdrop-blur-sm border rounded-xl p-4 transition-all cursor-pointer group ${
-                      isTop3 
-                        ? 'border-2' 
-                        : 'border-border hover:border-primary/30'
-                    }`}
-                    style={{
-                      borderColor: isTop3 ? tierColors[entry.tier] + '40' : undefined,
-                      boxShadow: isTop3 ? `0 0 30px ${tierColors[entry.tier]}15` : undefined,
-                    }}
-                  >
-                    {/* Top 3 special effects */}
-                    {isTop3 && (
-                      <>
-                        <div 
-                          className="absolute inset-0 rounded-xl opacity-20 pointer-events-none"
-                          style={{
-                            background: `linear-gradient(135deg, ${tierColors[entry.tier]}10 0%, transparent 50%)`,
-                          }}
-                        />
-                        <motion.div 
-                          className="absolute top-2 right-2"
-                          animate={{ rotate: [0, 10, -10, 0] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                        >
-                          <Sparkles className="w-4 h-4" style={{ color: tierColors[entry.tier] }} />
-                        </motion.div>
-                      </>
-                    )}
-                    
-                    <div className="flex items-center gap-4 relative z-10">
-                      {/* Rank */}
-                      {getRankBadge(index)}
-                      
-                      {/* Avatar */}
-                      <div className="relative">
-                        {entry.avatar_url ? (
-                          <motion.img 
-                            src={entry.avatar_url} 
-                            alt={entry.display_name || entry.username}
-                            className="w-14 h-14 rounded-full border-2 object-cover"
-                            style={{ borderColor: tierColors[entry.tier] }}
-                            whileHover={{ scale: 1.1 }}
-                            transition={{ type: "spring", stiffness: 400 }}
-                          />
-                        ) : (
+                  <Link to={`/profile/${entry.username}`}>
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.03 }}
+                      whileHover={{ 
+                        borderColor: tierColors[entry.tier] + '60',
+                        transition: { duration: 0.2 }
+                      }}
+                      className={`relative bg-card/50 backdrop-blur-sm border rounded-xl p-4 transition-all cursor-pointer group ${
+                        isTop3 
+                          ? 'border-2' 
+                          : 'border-border hover:border-primary/30'
+                      }`}
+                      style={{
+                        borderColor: isTop3 ? tierColors[entry.tier] + '40' : undefined,
+                        boxShadow: isTop3 ? `0 0 30px ${tierColors[entry.tier]}15` : undefined,
+                      }}
+                    >
+                      {/* Top 3 special effects */}
+                      {isTop3 && (
+                        <>
                           <div 
-                            className="w-14 h-14 rounded-full border-2 bg-muted flex items-center justify-center"
-                            style={{ borderColor: tierColors[entry.tier] }}
-                          >
-                            <span className="font-bold text-lg">{entry.username[0].toUpperCase()}</span>
-                          </div>
-                        )}
-                        {entry.nft_minted && (
+                            className="absolute inset-0 rounded-xl opacity-20 pointer-events-none"
+                            style={{
+                              background: `linear-gradient(135deg, ${tierColors[entry.tier]}10 0%, transparent 50%)`,
+                            }}
+                          />
                           <motion.div 
-                            className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-farcaster flex items-center justify-center border-2 border-background"
-                            whileHover={{ scale: 1.2 }}
+                            className="absolute top-2 right-2"
+                            animate={{ rotate: [0, 10, -10, 0] }}
+                            transition={{ duration: 2, repeat: Infinity }}
                           >
-                            <Gem className="w-3 h-3" />
+                            <Sparkles className="w-4 h-4" style={{ color: tierColors[entry.tier] }} />
                           </motion.div>
-                        )}
-                      </div>
-
-                      {/* User info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-display font-bold text-lg truncate group-hover:text-primary transition-colors">
-                            {entry.display_name || entry.username}
-                          </span>
-                          {tierIcons[entry.tier]}
-                        </div>
-                        <span className="text-sm text-muted-foreground">@{entry.username}</span>
-                      </div>
-
-                      {/* Stats */}
-                      <div className="hidden md:flex items-center gap-8 text-sm">
-                        <div className="text-center">
-                          <span className="block text-muted-foreground text-xs mb-1">Casts</span>
-                          <span className="font-display font-bold">{entry.casts?.toLocaleString() || 0}</span>
-                        </div>
-                        <div className="text-center">
-                          <span className="block text-muted-foreground text-xs mb-1">Followers</span>
-                          <span className="font-display font-bold">{entry.followers?.toLocaleString() || 0}</span>
-                        </div>
-                        {entry.base_score && entry.base_score > 0 && (
-                          <div className="text-center">
-                            <span className="block text-muted-foreground text-xs mb-1">Base</span>
-                            <span className="font-display font-bold text-base">{entry.base_score}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Score with change indicator */}
-                      <div className="text-right">
-                        <motion.div 
-                          className="px-4 py-2 rounded-xl flex items-center gap-2"
-                          style={{ 
-                            backgroundColor: `${tierColors[entry.tier]}20`,
-                          }}
-                          whileHover={{ scale: 1.05 }}
-                        >
-                          <span 
-                            className="font-display font-black text-2xl"
-                            style={{ color: tierColors[entry.tier] }}
-                          >
-                            {entry.score}
-                          </span>
-                          {scoreChange !== 0 && (
-                            <motion.div 
-                              initial={{ opacity: 0, y: 5 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className={`flex items-center text-xs font-bold ${scoreChange > 0 ? 'text-green-400' : 'text-red-400'}`}
+                        </>
+                      )}
+                      
+                      <div className="flex items-center gap-4 relative z-10">
+                        {/* Rank */}
+                        {getRankBadge(index)}
+                        
+                        {/* Avatar */}
+                        <div className="relative">
+                          {entry.avatar_url ? (
+                            <motion.img 
+                              src={entry.avatar_url} 
+                              alt={entry.display_name || entry.username}
+                              className="w-14 h-14 rounded-full border-2 object-cover"
+                              style={{ borderColor: tierColors[entry.tier] }}
+                              whileHover={{ scale: 1.1 }}
+                              transition={{ type: "spring", stiffness: 400 }}
+                            />
+                          ) : (
+                            <div 
+                              className="w-14 h-14 rounded-full border-2 bg-muted flex items-center justify-center"
+                              style={{ borderColor: tierColors[entry.tier] }}
                             >
-                              <TrendingUp className={`w-3 h-3 ${scoreChange < 0 ? 'rotate-180' : ''}`} />
-                              <span>{Math.abs(scoreChange)}</span>
+                              <span className="font-bold text-lg">{entry.username[0].toUpperCase()}</span>
+                            </div>
+                          )}
+                          {entry.nft_minted && (
+                            <motion.div 
+                              className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-farcaster flex items-center justify-center border-2 border-background"
+                              whileHover={{ scale: 1.2 }}
+                            >
+                              <Gem className="w-3 h-3" />
                             </motion.div>
                           )}
-                        </motion.div>
+                        </div>
+
+                        {/* User info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-display font-bold text-lg truncate group-hover:text-primary transition-colors">
+                              {entry.display_name || entry.username}
+                            </span>
+                            {tierIcons[entry.tier]}
+                          </div>
+                          <span className="text-sm text-muted-foreground">@{entry.username}</span>
+                        </div>
+
+                        {/* Stats */}
+                        <div className="hidden md:flex items-center gap-8 text-sm">
+                          <div className="text-center">
+                            <span className="block text-muted-foreground text-xs mb-1">Casts</span>
+                            <span className="font-display font-bold">{entry.casts?.toLocaleString() || 0}</span>
+                          </div>
+                          <div className="text-center">
+                            <span className="block text-muted-foreground text-xs mb-1">Followers</span>
+                            <span className="font-display font-bold">{entry.followers?.toLocaleString() || 0}</span>
+                          </div>
+                          {entry.base_score && entry.base_score > 0 && (
+                            <div className="text-center">
+                              <span className="block text-muted-foreground text-xs mb-1">Base</span>
+                              <span className="font-display font-bold text-base">{entry.base_score}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Score with change indicator */}
+                        <div className="text-right">
+                          <motion.div 
+                            className="px-4 py-2 rounded-xl flex items-center gap-2"
+                            style={{ 
+                              backgroundColor: `${tierColors[entry.tier]}20`,
+                            }}
+                            whileHover={{ scale: 1.05 }}
+                          >
+                            <span 
+                              className="font-display font-black text-2xl"
+                              style={{ color: tierColors[entry.tier] }}
+                            >
+                              {entry.score}
+                            </span>
+                            {scoreChange !== 0 && (
+                              <motion.div 
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className={`flex items-center text-xs font-bold ${scoreChange > 0 ? 'text-green-400' : 'text-red-400'}`}
+                              >
+                                <TrendingUp className={`w-3 h-3 ${scoreChange < 0 ? 'rotate-180' : ''}`} />
+                                <span>{Math.abs(scoreChange)}</span>
+                              </motion.div>
+                            )}
+                          </motion.div>
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
+                    </motion.div>
+                  </Link>
                 </TiltLeaderboardCard>
               );
             })}
