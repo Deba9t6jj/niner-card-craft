@@ -26,9 +26,23 @@ const Index = () => {
       <HeroSection onConnect={connectByUsername} isConnecting={isConnecting} />
       
       {/* Features section */}
-      <section className="py-24 px-6 bg-background relative overflow-hidden">
-        <AnimatedBackground variant="subtle" />
-        <div className="container mx-auto max-w-6xl">
+      <section className="py-24 px-6 relative overflow-hidden">
+        {/* Rich gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-card/80 to-background" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08)_0%,transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,hsl(var(--accent)/0.06)_0%,transparent_40%)]" />
+        
+        {/* Subtle grid pattern */}
+        <div 
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(hsl(var(--foreground)) 1px, transparent 1px),
+                             linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)`,
+            backgroundSize: '40px 40px'
+          }}
+        />
+        
+        <div className="container mx-auto max-w-6xl relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -72,18 +86,21 @@ const Index = () => {
                 whileTap={{ scale: 0.98 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="relative bg-card border border-border rounded-2xl p-8 hover:border-primary/50 transition-colors group interactive-card cursor-pointer"
+                className="relative bg-card/60 backdrop-blur-sm border border-border/50 rounded-2xl p-8 hover:border-primary/50 hover:bg-card/80 transition-all group interactive-card cursor-pointer shadow-lg shadow-black/5"
               >
+                {/* Card glow effect */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                
                 <div className="absolute -top-4 left-8">
-                  <span className="font-display font-black text-5xl text-muted/30 group-hover:text-primary/30 transition-colors">
+                  <span className="font-display font-black text-5xl text-muted/20 group-hover:text-primary/30 transition-colors">
                     {item.step}
                   </span>
                 </div>
-                <div className="text-4xl mb-4 mt-4">{item.icon}</div>
-                <h3 className="font-display font-bold text-xl mb-2">
+                <div className="relative text-4xl mb-4 mt-4">{item.icon}</div>
+                <h3 className="relative font-display font-bold text-xl mb-2">
                   {item.title}
                 </h3>
-                <p className="text-muted-foreground">{item.description}</p>
+                <p className="relative text-muted-foreground">{item.description}</p>
               </motion.div>
             ))}
           </div>
@@ -91,9 +108,31 @@ const Index = () => {
       </section>
 
       {/* Tiers section */}
-      <section className="py-24 px-6 bg-card/50 relative overflow-hidden">
-        <AnimatedBackground variant="dashboard" />
-        <div className="container mx-auto max-w-6xl">
+      <section className="py-24 px-6 relative overflow-hidden">
+        {/* Rich gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-card/30 via-background to-card/30" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--tier-gold)/0.06)_0%,transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,hsl(var(--primary)/0.05)_0%,transparent_40%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,hsl(var(--base)/0.05)_0%,transparent_40%)]" />
+        
+        {/* Animated glow orbs */}
+        <motion.div
+          animate={{
+            opacity: [0.3, 0.5, 0.3],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{ duration: 8, repeat: Infinity }}
+          className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-tier-gold/10 blur-[100px]"
+        />
+        <motion.div
+          animate={{
+            opacity: [0.2, 0.4, 0.2],
+            scale: [1.1, 1, 1.1],
+          }}
+          transition={{ duration: 10, repeat: Infinity, delay: 2 }}
+          className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-tier-diamond/10 blur-[80px]"
+        />
+        <div className="container mx-auto max-w-6xl relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
