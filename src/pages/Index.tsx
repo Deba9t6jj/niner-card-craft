@@ -5,6 +5,7 @@ import { StickyNav } from "@/components/StickyNav";
 import { useFarcasterAuth } from "@/hooks/useFarcasterAuth";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { TopProgressBar } from "@/components/PageLoader";
+import { LiveActivityFeed } from "@/components/LiveActivityFeed";
 
 const Index = () => {
   const { isConnecting, isConnected, data, connectByUsername, disconnect, refresh } = useFarcasterAuth();
@@ -210,7 +211,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* CTA section */}
+      {/* CTA section with Live Activity Feed */}
       <section className="py-24 px-6 bg-hero relative overflow-hidden">
         <div className="absolute inset-0">
           <motion.div
@@ -223,19 +224,34 @@ const Index = () => {
           />
         </div>
         
-        <div className="relative z-10 container mx-auto max-w-3xl text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="font-display font-black text-4xl md:text-6xl mb-6">
-              READY TO CLAIM YOUR <span className="text-gradient-primary">IDENTITY</span>?
-            </h2>
-            <p className="text-muted-foreground text-lg mb-8">
-              Join thousands of Farcaster users who've already claimed their unique NFT cards.
-            </p>
-          </motion.div>
+        <div className="relative z-10 container mx-auto max-w-6xl">
+          <div className="grid lg:grid-cols-2 gap-12 items-start">
+            {/* Left: CTA content */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center lg:text-left"
+            >
+              <h2 className="font-display font-black text-4xl md:text-6xl mb-6">
+                READY TO CLAIM YOUR <span className="text-gradient-primary">IDENTITY</span>?
+              </h2>
+              <p className="text-muted-foreground text-lg mb-8">
+                Join thousands of Farcaster users who've already claimed their unique NFT cards.
+              </p>
+            </motion.div>
+
+            {/* Right: Live Activity Feed */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="bg-card/50 backdrop-blur-sm border border-border rounded-2xl p-6"
+            >
+              <LiveActivityFeed limit={8} compact />
+            </motion.div>
+          </div>
         </div>
       </section>
 
