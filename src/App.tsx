@@ -21,10 +21,19 @@ const App = () => {
   useEffect(() => {
     const initializeSdk = async () => {
       try {
+        // Signal to Base/Farcaster that the app is ready to display
         await sdk.actions.ready();
-        console.log("✅ Mini App SDK ready!");
+        console.log("✅ Base Mini App SDK ready!");
+        
+        // Optional: Get context about the Mini App environment
+        const context = await sdk.context;
+        if (context) {
+          console.log("📱 Running inside Base Mini App");
+          console.log("User FID:", context.user?.fid);
+        }
       } catch (error) {
-        console.error("❌ Failed to initialize SDK:", error);
+        // App still works outside of Mini App context
+        console.log("ℹ️ Running outside Mini App context (web browser)");
       }
     };
 
