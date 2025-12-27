@@ -12,6 +12,7 @@ import Layout from "./pages/Layout";
 import Cards from "./pages/Cards";
 import Leaderboard from "./pages/Leaderboard";
 import Explore from "./pages/Explore";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const App = () => {
                 <Route path="cards" element={<Cards />} />
                 <Route path="leaderboard" element={<Leaderboard />} />
                 <Route path="explore" element={<Explore />} />
+                <Route path="profile/:username" element={<Profile />} />
               </Route>
             </Routes>
           </BrowserRouter>
