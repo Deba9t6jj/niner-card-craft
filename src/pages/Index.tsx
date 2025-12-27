@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import HeroSection from "@/components/HeroSection";
-import Dashboard from "@/components/Dashboard";
+import { Dashboard } from "@/components/Dashboard";
 import { StickyNav } from "@/components/StickyNav";
 import { useFarcasterAuth } from "@/hooks/useFarcasterAuth";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
