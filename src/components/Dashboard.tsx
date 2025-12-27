@@ -9,6 +9,7 @@ import { BaseScorePanel } from "./base/BaseScorePanel";
 import { CombinedScoreCard, type CombinedTierType } from "./base/CombinedScoreCard";
 import { BaseTransactions } from "./base/BaseTransactions";
 import { WalletConnector } from "./base/WalletConnector";
+import { ScoreBreakdownTooltip } from "./ScoreBreakdownTooltip";
 import { Share2, Download, LogOut, Sparkles, MessageCircle, Trophy, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { TierType } from "./NinerCard";
@@ -499,8 +500,15 @@ export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: Dashb
               )}
             </div>
 
-            {/* Score display */}
-            <div className="flex justify-center lg:justify-start">
+            {/* Score display with breakdown tooltip */}
+            <div className="flex flex-col items-center lg:items-start gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Your Score</span>
+                <ScoreBreakdownTooltip 
+                  stats={stats} 
+                  totalScore={ninerScore} 
+                />
+              </div>
               <ScoreDisplay score={ninerScore} tier={tier} />
             </div>
 

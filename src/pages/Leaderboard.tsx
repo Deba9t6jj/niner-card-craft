@@ -3,6 +3,8 @@ import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { StickyNav } from "@/components/StickyNav";
+import { LeaderboardSkeleton } from "@/components/Skeletons";
 import { Trophy, Medal, Crown, Gem, ArrowLeft, Loader2, TrendingUp, Flame, Sparkles } from "lucide-react";
 
 interface LeaderboardEntry {
@@ -212,12 +214,7 @@ const Leaderboard = () => {
         </motion.div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="flex flex-col items-center gap-4">
-              <Loader2 className="w-10 h-10 animate-spin text-primary" />
-              <span className="text-muted-foreground">Loading rankings...</span>
-            </div>
-          </div>
+          <LeaderboardSkeleton />
         ) : entries.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -375,6 +372,9 @@ const Leaderboard = () => {
           </div>
         )}
       </main>
+      
+      {/* Sticky Navigation */}
+      <StickyNav />
     </div>
   );
 };

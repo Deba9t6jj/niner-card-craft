@@ -1,13 +1,19 @@
 import { motion } from "framer-motion";
 import HeroSection from "@/components/HeroSection";
 import Dashboard from "@/components/Dashboard";
+import { StickyNav } from "@/components/StickyNav";
 import { useFarcasterAuth } from "@/hooks/useFarcasterAuth";
 
 const Index = () => {
   const { isConnecting, isConnected, data, connectByUsername, disconnect, refresh } = useFarcasterAuth();
 
   if (isConnected && data) {
-    return <Dashboard data={data} onDisconnect={disconnect} onRefresh={refresh} isRefreshing={isConnecting} />;
+    return (
+      <>
+        <Dashboard data={data} onDisconnect={disconnect} onRefresh={refresh} isRefreshing={isConnecting} />
+        <StickyNav />
+      </>
+    );
   }
 
   return (
