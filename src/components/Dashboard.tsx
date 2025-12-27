@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import NinerCard from "./NinerCard";
+import TiltCard from "./TiltCard";
 import ScoreDisplay from "./ScoreDisplay";
 import StatsGrid from "./StatsGrid";
 import { MintNFTButton } from "./MintNFTButton";
@@ -396,18 +397,23 @@ export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: Dashb
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <NinerCard
-              username={user.username}
-              displayName={user.displayName || user.username}
-              avatar={user.pfpUrl || ''}
-              score={ninerScore}
-              tier={tier}
-              stats={{
-                casts: stats.casts,
-                followers: stats.followers,
-                engagement: stats.engagement,
-              }}
-            />
+            <TiltCard 
+              glowColor={tier === 'diamond' ? 'hsl(190 100% 70%)' : tier === 'gold' ? 'hsl(45 100% 55%)' : tier === 'silver' ? 'hsl(220 15% 70%)' : 'hsl(30 60% 50%)'}
+              className="group"
+            >
+              <NinerCard
+                username={user.username}
+                displayName={user.displayName || user.username}
+                avatar={user.pfpUrl || ''}
+                score={ninerScore}
+                tier={tier}
+                stats={{
+                  casts: stats.casts,
+                  followers: stats.followers,
+                  engagement: stats.engagement,
+                }}
+              />
+            </TiltCard>
 
             {/* Action buttons */}
             <motion.div 
