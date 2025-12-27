@@ -1,0 +1,29 @@
+{
+  "name": "Niner Score",
+  "description": "Get your Farcaster reputation NFT identity card",
+  "iconUrl": "https://www.neynar-card-craft.fun/icon.png",
+  "splashImageUrl": "https://www.neynar-card-craft.fun/splash.png",
+  "splashBackgroundColor": "#0a0a0f",
+  "url": "https://www.neynar-card-craft.fun",
+  "supportedChains": ["base"],
+  "category": "social",
+  "tags": ["farcaster", "nft", "identity", "reputation"],
+  "version": "1.0.0",
+  "manifestVersion": "1.0.0",
+  "appId": "69458651d19763ca26ddc571",
+  "developer": {
+    "name": "Niner Score Team",
+    "url": "https://www.neynar-card-craft.fun"
+  },
+  "features": {
+    "frames": true,
+    "castActions": true,
+    "embedded": true,
+    "transactions": true
+  },
+  "permissions": [
+    "farcaster",
+    "storage",
+    "notifications"
+  ]
+}
