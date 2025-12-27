@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import FarcasterConnect from "./FarcasterConnect";
 import { AnimatedBackground, MeshGradientBackground } from "./AnimatedBackground";
+import { ParticleField } from "./ParticleField";
 
 interface HeroSectionProps {
   onConnect: (username: string) => void;
@@ -10,6 +11,14 @@ interface HeroSectionProps {
 export const HeroSection = ({ onConnect, isConnecting }: HeroSectionProps) => {
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center px-6 py-20 bg-hero animated-gradient-bg overflow-hidden">
+      {/* Interactive particle field */}
+      <ParticleField 
+        particleCount={40}
+        mouseInfluence={120}
+        connectDistance={100}
+        colors={["#8b5cf6", "#a855f7", "#6366f1", "#3b82f6"]}
+      />
+      
       {/* Animated background effects */}
       <AnimatedBackground variant="hero" />
       <MeshGradientBackground className="opacity-50" />
