@@ -289,15 +289,25 @@ export const NinerCard = ({
         />
 
         {/* Shimmer effect */}
-        <motion.div
-          initial={{ x: '-100%' }}
-          animate={{ x: '200%' }}
-          transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }}
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: `linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.03) 45%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 55%, transparent 60%)`,
-          }}
-        />
+        <div
+          className="absolute inset-0 pointer-events-none overflow-hidden"
+        >
+          <motion.div
+            animate={{ 
+              translateX: ["-100%", "200%"]
+            }}
+            transition={{ 
+              duration: 2.5, 
+              repeat: Infinity, 
+              repeatDelay: 3,
+              ease: "easeInOut"
+            }}
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.02) 45%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.02) 55%, transparent 60%)`,
+            }}
+          />
+        </div>
       </div>
     </motion.div>
   );
