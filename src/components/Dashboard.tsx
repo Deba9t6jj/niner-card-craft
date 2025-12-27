@@ -20,6 +20,8 @@ import { useBaseScore } from "@/hooks/useBaseScore";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { usePrimaryButton } from "@/hooks/usePrimaryButton";
+import { useMiniAppWallet } from "@/hooks/useMiniAppWallet";
 
 interface DashboardProps {
   data: FarcasterData;
@@ -59,6 +61,13 @@ export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: Dashb
   const [manualWallets, setManualWallets] = useState<string[]>([]);
   const { triggerConfetti } = useTierCelebration(tier);
   const previousTierRef = useRef<string | null>(null);
+  const mintButtonRef = useRef<{ triggerMint: () => void } | null>(null);
+  
+  // Primary button hook for Mini App
+  const { setPrimaryButton, hidePrimaryButton, showLoading, hideLoading } = usePrimaryButton();
+  
+  // Mini App wallet for checking connection status
+  const miniAppWallet = useMiniAppWallet();
   
   // Mock streak days - in production this would come from activity data
   const streakDays = Math.min(30, Math.floor(activity.totalCasts / 10));
@@ -82,6 +91,53 @@ export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: Dashb
       ? Math.round((activity.totalLikes + activity.totalRecasts) / Math.max(activity.totalCasts, 1) * 10) / 10
       : 0,
   };
+
+  // Set up primary button based on wallet connection status
+  useEffect(() => {
+    const isWalletConnected = miniAppWallet.isConnected;
+    
+    if (!isWalletConnected) {
+      // Show "Connect Wallet" button when not connected
+      setPrimaryButton(
+        { text: "🔗 Connect Wallet to Mint NFT" },
+        async () => {
+          try {
+            showLoading("Connecting...");
+            await miniAppWallet.connect();
+            hideLoading();
+          } catch {
+            hideLoading();
+            toast({
+              title: "Connection Failed",
+              description: "Please try again",
+              variant: "destructive",
+            });
+          }
+        }
+      );
+    } else {
+      // Show "Mint NFT" button when connected
+      setPrimaryButton(
+        { text: `✨ Mint ${tier.toUpperCase()} NFT Card` },
+        () => {
+          // Trigger the mint action from MintNFTButton
+          if (mintButtonRef.current?.triggerMint) {
+            mintButtonRef.current.triggerMint();
+          } else {
+            // Scroll to the mint button and show toast
+            toast({
+              title: "Ready to Mint",
+              description: "Tap the Mint NFT button below!",
+            });
+          }
+        }
+      );
+    }
+
+    return () => {
+      hidePrimaryButton();
+    };
+  }, [miniAppWallet.isConnected, tier, setPrimaryButton, hidePrimaryButton, showLoading, hideLoading, toast]);
 
   // Fetch Base activity if user has verified addresses or manual wallets
   useEffect(() => {

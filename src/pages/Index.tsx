@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import HeroSection from "@/components/HeroSection";
 import Dashboard from "@/components/Dashboard";
@@ -6,9 +7,50 @@ import { useFarcasterAuth } from "@/hooks/useFarcasterAuth";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { TopProgressBar } from "@/components/PageLoader";
 import { LiveActivityFeed } from "@/components/LiveActivityFeed";
+import { usePrimaryButton } from "@/hooks/usePrimaryButton";
+import { useMiniApp } from "@/contexts/MiniAppContext";
 
 const Index = () => {
-  const { isConnecting, isConnected, data, connectByUsername, disconnect, refresh } = useFarcasterAuth();
+  const { isConnecting, isConnected, data, connectByUsername, disconnect, refresh, isMiniApp } = useFarcasterAuth();
+  const { setPrimaryButton, hidePrimaryButton } = usePrimaryButton();
+  const { user: miniAppUser } = useMiniApp();
+  const heroInputRef = useRef<{ focusInput: () => void } | null>(null);
+
+  // Set up primary button for landing page (Get Your Score)
+  useEffect(() => {
+    if (!isConnected) {
+      // If we have a Mini App user, auto-show "View My Score" button
+      if (miniAppUser?.fid) {
+        setPrimaryButton(
+          { text: "🎯 View My Score" },
+          () => {
+            // The useFarcasterAuth hook should auto-connect via SDK context
+            // This is a fallback if it didn't happen
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        );
+      } else {
+        // Show "Get Started" button for non-authenticated users
+        setPrimaryButton(
+          { text: "🚀 Get Your Niner Score" },
+          () => {
+            // Scroll to hero and focus the input
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            heroInputRef.current?.focusInput?.();
+          }
+        );
+      }
+    } else {
+      // When connected, the Dashboard will handle the primary button
+      hidePrimaryButton();
+    }
+
+    return () => {
+      if (!isConnected) {
+        hidePrimaryButton();
+      }
+    };
+  }, [isConnected, miniAppUser?.fid, setPrimaryButton, hidePrimaryButton]);
 
   if (isConnected && data) {
     return (
