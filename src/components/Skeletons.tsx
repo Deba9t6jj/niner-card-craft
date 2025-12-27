@@ -1,6 +1,83 @@
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const shimmerTransition = {
+  repeat: Infinity,
+  duration: 1.5,
+  ease: "linear" as const
+};
+
+const pulseTransition = {
+  repeat: Infinity,
+  duration: 1.5,
+  ease: "easeInOut" as const
+};
+
+export const LoadingSpinner = ({ size = "md" }: { size?: "sm" | "md" | "lg" }) => {
+  const sizeClasses = {
+    sm: "w-4 h-4 border-2",
+    md: "w-8 h-8 border-3",
+    lg: "w-12 h-12 border-4"
+  };
+  
+  return (
+    <motion.div 
+      className={`${sizeClasses[size]} border-primary/30 border-t-primary rounded-full`}
+      animate={{ rotate: 360 }}
+      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+    />
+  );
+};
+
+export const ProgressRing = ({ progress = 0, size = 60 }: { progress?: number; size?: number }) => {
+  const strokeWidth = 4;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (progress / 100) * circumference;
+
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg className="transform -rotate-90" width={size} height={size}>
+        <circle
+          className="stroke-muted"
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          r={radius}
+          cx={size / 2}
+          cy={size / 2}
+        />
+        <motion.circle
+          className="stroke-primary"
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          r={radius}
+          cx={size / 2}
+          cy={size / 2}
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ strokeDashoffset: offset }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          style={{
+            strokeDasharray: circumference,
+            strokeLinecap: "round"
+          }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-sm font-semibold text-foreground">{Math.round(progress)}%</span>
+      </div>
+    </div>
+  );
+};
+
+export const ShimmerSkeleton = ({ className }: { className?: string }) => (
+  <motion.div
+    className={`bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] rounded-md ${className}`}
+    initial={{ backgroundPosition: "-200% 0" }}
+    animate={{ backgroundPosition: "200% 0" }}
+    transition={shimmerTransition}
+  />
+);
+
 export const DashboardSkeleton = () => {
   return (
     <div className="min-h-screen bg-hero light-beam-bg">
