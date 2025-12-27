@@ -3,6 +3,8 @@ import HeroSection from "@/components/HeroSection";
 import Dashboard from "@/components/Dashboard";
 import { StickyNav } from "@/components/StickyNav";
 import { useFarcasterAuth } from "@/hooks/useFarcasterAuth";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
+import { TopProgressBar } from "@/components/PageLoader";
 
 const Index = () => {
   const { isConnecting, isConnected, data, connectByUsername, disconnect, refresh } = useFarcasterAuth();
@@ -10,6 +12,7 @@ const Index = () => {
   if (isConnected && data) {
     return (
       <>
+        <TopProgressBar isLoading={isConnecting} />
         <Dashboard data={data} onDisconnect={disconnect} onRefresh={refresh} isRefreshing={isConnecting} />
         <StickyNav />
       </>
@@ -18,10 +21,12 @@ const Index = () => {
 
   return (
     <main className="relative">
+      <TopProgressBar isLoading={isConnecting} />
       <HeroSection onConnect={connectByUsername} isConnecting={isConnecting} />
       
       {/* Features section */}
-      <section className="py-24 px-6 bg-background">
+      <section className="py-24 px-6 bg-background relative overflow-hidden">
+        <AnimatedBackground variant="subtle" />
         <div className="container mx-auto max-w-6xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -62,9 +67,11 @@ const Index = () => {
                 key={item.step}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -8, scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="relative bg-card border border-border rounded-2xl p-8 hover:border-primary/50 transition-colors group"
+                className="relative bg-card border border-border rounded-2xl p-8 hover:border-primary/50 transition-colors group interactive-card cursor-pointer"
               >
                 <div className="absolute -top-4 left-8">
                   <span className="font-display font-black text-5xl text-muted/30 group-hover:text-primary/30 transition-colors">
@@ -83,7 +90,8 @@ const Index = () => {
       </section>
 
       {/* Tiers section */}
-      <section className="py-24 px-6 bg-card/50">
+      <section className="py-24 px-6 bg-card/50 relative overflow-hidden">
+        <AnimatedBackground variant="dashboard" />
         <div className="container mx-auto max-w-6xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

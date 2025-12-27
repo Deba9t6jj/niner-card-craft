@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import FarcasterConnect from "./FarcasterConnect";
+import { AnimatedBackground, MeshGradientBackground } from "./AnimatedBackground";
 
 interface HeroSectionProps {
   onConnect: (username: string) => void;
@@ -8,37 +9,23 @@ interface HeroSectionProps {
 
 export const HeroSection = ({ onConnect, isConnecting }: HeroSectionProps) => {
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-6 py-20 bg-hero light-beam-bg overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute inset-0 overflow-hidden">
-        {/* Gradient orbs */}
-        <motion.div
-          animate={{ 
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3]
-          }}
-          transition={{ duration: 8, repeat: Infinity }}
-          className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-farcaster/20 blur-3xl"
-        />
-        <motion.div
-          animate={{ 
-            scale: [1.2, 1, 1.2],
-            opacity: [0.2, 0.4, 0.2]
-          }}
-          transition={{ duration: 10, repeat: Infinity }}
-          className="absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-accent/20 blur-3xl"
-        />
-        
-        {/* Grid pattern */}
-        <div 
-          className="absolute inset-0 opacity-5"
-          style={{
-            backgroundImage: `linear-gradient(hsl(var(--foreground)) 1px, transparent 1px),
-                             linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)`,
-            backgroundSize: '60px 60px'
-          }}
-        />
-      </div>
+    <section className="relative min-h-screen flex flex-col items-center justify-center px-6 py-20 bg-hero animated-gradient-bg overflow-hidden">
+      {/* Animated background effects */}
+      <AnimatedBackground variant="hero" />
+      <MeshGradientBackground className="opacity-50" />
+      
+      {/* Light beam effect */}
+      <div className="absolute inset-0 light-beam-bg pointer-events-none" />
+      
+      {/* Grid pattern */}
+      <div 
+        className="absolute inset-0 opacity-5 pointer-events-none"
+        style={{
+          backgroundImage: `linear-gradient(hsl(var(--foreground)) 1px, transparent 1px),
+                           linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)`,
+          backgroundSize: '60px 60px'
+        }}
+      />
 
       {/* Content */}
       <div className="relative z-10 max-w-4xl mx-auto text-center">
@@ -93,8 +80,10 @@ export const HeroSection = ({ onConnect, isConnecting }: HeroSectionProps) => {
               key={item.tier}
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.1, y: -5 }}
+              whileTap={{ scale: 0.95 }}
               transition={{ delay: 0.4 + index * 0.1 }}
-              className={`w-12 h-16 md:w-16 md:h-20 rounded-lg ${item.color} shadow-lg ${item.glow} flex items-end justify-center pb-1`}
+              className={`w-12 h-16 md:w-16 md:h-20 rounded-lg ${item.color} shadow-lg ${item.glow} flex items-end justify-center pb-1 cursor-pointer hover-glow`}
             >
               <span className="text-[8px] md:text-[10px] font-display font-bold text-foreground/80 uppercase">
                 {item.tier}
