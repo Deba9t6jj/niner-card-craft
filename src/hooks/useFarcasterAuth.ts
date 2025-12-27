@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { sdk } from '@farcaster/miniapp-sdk';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -38,7 +39,39 @@ export function useFarcasterAuth() {
   const [isConnected, setIsConnected] = useState(false);
   const [data, setData] = useState<FarcasterData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isMiniApp, setIsMiniApp] = useState(false);
   const { toast } = useToast();
+
+  // Auto-detect Mini App context and fetch user data
+  useEffect(() => {
+    const checkMiniAppContext = async () => {
+      try {
+        const context = await sdk.context;
+        if (context?.user?.fid) {
+          setIsMiniApp(true);
+          console.log('📱 Mini App detected, auto-fetching user data for FID:', context.user.fid);
+          
+          // Auto-fetch user data from SDK context
+          setIsConnecting(true);
+          const { data: statsData, error: statsError } = await supabase.functions.invoke('farcaster-auth', {
+            body: { action: 'get_user_stats', fid: context.user.fid },
+          });
+
+          if (!statsError && statsData) {
+            setData(statsData);
+            setIsConnected(true);
+            console.log('✅ Auto-connected via Mini App SDK');
+          }
+          setIsConnecting(false);
+        }
+      } catch (err) {
+        // Not in Mini App context, user will connect manually
+        console.log('ℹ️ Not in Mini App context');
+      }
+    };
+
+    checkMiniAppContext();
+  }, []);
 
   const connectByUsername = useCallback(async (username: string) => {
     setIsConnecting(true);
@@ -75,6 +108,40 @@ export function useFarcasterAuth() {
       const fid = lookupData.user.fid;
 
       // Now get full stats
+      const { data: statsData, error: statsError } = await supabase.functions.invoke('farcaster-auth', {
+        body: { action: 'get_user_stats', fid },
+      });
+
+      if (statsError) {
+        throw new Error(statsError.message || 'Failed to get user stats');
+      }
+
+      setData(statsData);
+      setIsConnected(true);
+      
+      toast({
+        title: "Connected!",
+        description: `Welcome, ${statsData.user.displayName || statsData.user.username}!`,
+      });
+
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to connect';
+      setError(message);
+      toast({
+        title: "Connection Failed",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsConnecting(false);
+    }
+  }, [toast]);
+
+  const connectByFid = useCallback(async (fid: number) => {
+    setIsConnecting(true);
+    setError(null);
+
+    try {
       const { data: statsData, error: statsError } = await supabase.functions.invoke('farcaster-auth', {
         body: { action: 'get_user_stats', fid },
       });
@@ -150,7 +217,9 @@ export function useFarcasterAuth() {
     isConnected,
     data,
     error,
+    isMiniApp,
     connectByUsername,
+    connectByFid,
     disconnect,
     refresh,
   };

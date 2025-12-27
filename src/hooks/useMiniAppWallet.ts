@@ -16,6 +16,7 @@ interface UseMiniAppWalletReturn extends MiniAppWalletState {
   connect: () => Promise<void>;
   disconnect: () => void;
   signMessage: (message: string) => Promise<string | null>;
+  sendTransaction: (params: { to: Address; value?: bigint; data?: `0x${string}` }) => Promise<string | null>;
 }
 
 export function useMiniAppWallet(): UseMiniAppWalletReturn {
@@ -137,7 +138,7 @@ export function useMiniAppWallet(): UseMiniAppWalletReturn {
     }
 
     try {
-      // Use SDK's signTypedData or ethProvider for signing
+      // Use SDK's ethProvider for signing
       const provider = sdk.wallet.ethProvider;
       if (provider) {
         const signature = await provider.request({
@@ -165,10 +166,63 @@ export function useMiniAppWallet(): UseMiniAppWalletReturn {
     }
   }, [state.address, state.walletClient]);
 
+  const sendTransaction = useCallback(async (params: { 
+    to: Address; 
+    value?: bigint; 
+    data?: `0x${string}` 
+  }): Promise<string | null> => {
+    if (!state.address) {
+      console.error('No address connected');
+      return null;
+    }
+
+    try {
+      const provider = sdk.wallet.ethProvider;
+      if (provider) {
+        const txHash = await provider.request({
+          method: 'eth_sendTransaction',
+          params: [{
+            from: state.address,
+            to: params.to,
+            value: params.value ? `0x${params.value.toString(16)}` : undefined,
+            data: params.data,
+          }],
+        }) as string;
+        
+        console.log('✅ Transaction sent via Mini App SDK:', txHash);
+        return txHash;
+      }
+      
+      // Fallback to walletClient - use provider request directly
+      if (state.walletClient && state.walletClient.transport) {
+        try {
+          const hash = await (state.walletClient.transport as any).request({
+            method: 'eth_sendTransaction',
+            params: [{
+              from: state.address,
+              to: params.to,
+              value: params.value ? `0x${params.value.toString(16)}` : undefined,
+              data: params.data,
+            }],
+          });
+          return hash as string;
+        } catch {
+          return null;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error sending transaction:', error);
+      return null;
+    }
+  }, [state.address, state.walletClient]);
+
   return {
     ...state,
     connect,
     disconnect,
     signMessage,
+    sendTransaction,
   };
 }
