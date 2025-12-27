@@ -4,13 +4,71 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     
-    <!-- Base App Directory Verification -->
+    <!-- ===================== -->
+    <!-- BASE APP METADATA -->
+    <!-- ===================== -->
     <meta name="base:app_id" content="69458651d19763ca26ddc571" />
+    <meta property="base:app" content="Niner Score" />
+    <meta property="base:network" content="base" />
+    <meta property="base:theme" content="dark" />
+    <meta property="base:version" content="1.0.0" />
+    <meta property="base:category" content="social" />
+    <meta property="base:supported_chains" content="base,optimism,arbitrum" />
     
+    <!-- ===================== -->
+    <!-- FARCASTER FRAME METADATA -->
+    <!-- ===================== -->
+    <!-- Core Frame Tags -->
+    <meta property="fc:frame" content="vNext" />
+    <meta property="fc:frame:image" content="https://www.neynar-card-craft.fun/og-image.png" />
+    <meta property="fc:frame:image:aspect_ratio" content="1.91:1" />
+    <meta property="fc:frame:post_url" content="https://www.neynar-card-craft.fun/api/frame" />
+    <meta property="fc:frame:button:1" content="🎯 Get My Score" />
+    <meta property="fc:frame:button:1:action" content="post" />
+    <meta property="fc:frame:button:2" content="🏆 View Tiers" />
+    <meta property="fc:frame:button:2:action" content="post" />
+    <meta property="fc:frame:button:2:target" content="https://www.neynar-card-craft.fun/api/tiers" />
+    <meta property="fc:frame:button:3" content="📱 Open App" />
+    <meta property="fc:frame:button:3:action" content="post_redirect" />
+    <meta property="fc:frame:input:text" content="Enter Farcaster username (e.g., deba9t6)" />
+    
+    <!-- Frame State & Context -->
+    <meta property="fc:frame:state" content='{"app":"niner-score","version":"1.0"}' />
+    
+    <!-- ===================== -->
+    <!-- FARCASTER MINI APP FEATURES -->
+    <!-- ===================== -->
+    <meta name="fc:feature" content="frames" />
+    <meta name="fc:feature" content="cast_action" />
+    <meta name="fc:feature" content="mini_app" />
+    <meta name="fc:feature" content="embedded" />
+    
+    <!-- Open Frames Compatibility -->
+    <meta name="of:version" content="vNext" />
+    <meta name="of:accepts:push" content="mint" />
+    <meta name="of:accepts:push" content="frame" />
+    <meta name="of:accepts:push" content="transaction" />
+    <meta name="of:image" content="https://www.neynar-card-craft.fun/og-image.png" />
+    <meta name="of:post_url" content="https://www.neynar-card-craft.fun/api/frame" />
+    
+    <!-- Cast Action for Warpcast -->
+    <link rel="cast-action" href="https://www.neynar-card-craft.fun/cast-action.json" />
+    
+    <!-- ===================== -->
+    <!-- NEYNAR INTEGRATION -->
+    <!-- ===================== -->
+    <meta name="neynar:app" content="niner-score" />
+    <meta name="neynar:api_version" content="2024-01-01" />
+    <meta name="neynar:features" content="frame,cast_action,mini_app,identity" />
+    
+    <!-- ===================== -->
+    <!-- YOUR EXISTING METADATA -->
+    <!-- ===================== -->
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/icon.png" />
     <link rel="apple-touch-icon" href="/icon.png" />
     
+    <!-- Title & Description -->
     <title>Niner Score | Farcaster Reputation NFT Identity Cards</title>
     <meta name="description" content="Get your free NFT identity card based on your Farcaster engagement score. Bronze, Silver, Gold, or Diamond — claim your tier now." />
     <meta name="keywords" content="Farcaster, NFT, identity card, social reputation, Web3, Base, OpenSea" />
@@ -56,9 +114,167 @@
     <meta name="theme-color" content="#0a0a0f" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    
+    <!-- ===================== -->
+    <!-- MINI APP STYLES -->
+    <!-- ===================== -->
+    <style>
+        /* Mini App Detection & Styling */
+        body.mini-app {
+            background: #0a0a0f;
+            margin: 0;
+            padding: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .mini-app-header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 24px;
+        }
+        
+        .mini-app-content {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .score-card {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 16px 0;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+    </style>
+    
+    <!-- ===================== -->
+    <!-- MINI APP DETECTION SCRIPT -->
+    <!-- ===================== -->
+    <script>
+        // Detect if running inside Base/Farcaster Mini App
+        (function() {
+            const isMiniApp = 
+                window.location.search.includes('mini_app=true') ||
+                window.location.search.includes('frame=true') ||
+                window.self !== window.top ||
+                navigator.userAgent.includes('Farcaster') ||
+                navigator.userAgent.includes('Base');
+            
+            if (isMiniApp) {
+                document.body.classList.add('mini-app');
+                
+                // Initialize mini app mode
+                console.log('Niner Score Mini App initialized');
+                
+                // Send ready message to parent (Base/Farcaster)
+                if (window.parent !== window.self) {
+                    window.parent.postMessage({
+                        type: 'mini_app_ready',
+                        app: 'Niner Score',
+                        version: '1.0.0',
+                        url: window.location.href
+                    }, '*');
+                }
+                
+                // Listen for messages from parent
+                window.addEventListener('message', function(event) {
+                    if (event.data.type === 'farcaster_user_data') {
+                        // Handle user data from Farcaster
+                        handleFarcasterUserData(event.data.user);
+                    }
+                    
+                    if (event.data.type === 'base_transaction') {
+                        // Handle Base transaction
+                        handleBaseTransaction(event.data.transaction);
+                    }
+                });
+                
+                function handleFarcasterUserData(user) {
+                    // Store user data for your app
+                    localStorage.setItem('farcaster_user', JSON.stringify(user));
+                    
+                    // Auto-fill username if available
+                    if (user.username) {
+                        console.log('Farcaster user detected:', user.username);
+                        // You can update your React app state here
+                        if (window.ReactApp && window.ReactApp.setUsername) {
+                            window.ReactApp.setUsername(user.username);
+                        }
+                    }
+                }
+                
+                function handleBaseTransaction(transaction) {
+                    console.log('Base transaction received:', transaction);
+                    // Handle NFT minting transaction
+                }
+            }
+        })();
+    </script>
 </head>
 <body>
+    <!-- Your React App Root -->
     <div id="root"></div>
+    
+    <!-- Mini App Fallback UI (hidden by default) -->
+    <div id="mini-app-fallback" style="display: none;">
+        <div class="mini-app-header">
+            <h1 style="color: white; margin: 0;">🎯 Niner Score</h1>
+            <p style="color: #9ca3af; margin: 8px 0 0 0;">Farcaster Reputation Mini App</p>
+        </div>
+        <div class="mini-app-content">
+            <div class="score-card">
+                <p style="color: #9ca3af; margin: 0 0 12px 0;">Enter your Farcaster username:</p>
+                <input type="text" id="username-input" placeholder="deba9t6" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #374151; background: #111827; color: white; margin-bottom: 16px;" />
+                <button onclick="getScore()" style="width: 100%; background: #3b82f6; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 16px; cursor: pointer;">
+                    Get My Niner Score
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Mini App Initialization -->
+    <script>
+        // Function to detect and handle mini app mode
+        function initializeMiniApp() {
+            const isMiniApp = document.body.classList.contains('mini-app');
+            
+            if (isMiniApp) {
+                // Show mini app fallback UI if React app doesn't load
+                setTimeout(() => {
+                    if (!document.getElementById('root').children.length) {
+                        document.getElementById('mini-app-fallback').style.display = 'block';
+                        document.getElementById('root').style.display = 'none';
+                    }
+                }, 2000);
+            }
+        }
+        
+        function getScore() {
+            const username = document.getElementById('username-input').value;
+            if (!username) return;
+            
+            // Call your API to get score
+            fetch(`https://www.neynar-card-craft.fun/api/score?username=${encodeURIComponent(username)}`)
+                .then(response => response.json())
+                .then(data => {
+                    alert(`Your Niner Score: ${data.score}\nTier: ${data.tier}`);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+        
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initializeMiniApp);
+        
+        // Export functions for React app to use
+        window.ReactApp = window.ReactApp || {};
+        window.ReactApp.isMiniApp = function() {
+            return document.body.classList.contains('mini-app');
+        };
+    </script>
 </body>
 </html>
