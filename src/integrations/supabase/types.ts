@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      activities: {
+        Row: {
+          action_data: Json | null
+          action_type: string
+          avatar_url: string | null
+          created_at: string
+          fid: number | null
+          id: string
+          username: string
+        }
+        Insert: {
+          action_data?: Json | null
+          action_type: string
+          avatar_url?: string | null
+          created_at?: string
+          fid?: number | null
+          id?: string
+          username: string
+        }
+        Update: {
+          action_data?: Json | null
+          action_type?: string
+          avatar_url?: string | null
+          created_at?: string
+          fid?: number | null
+          id?: string
+          username?: string
+        }
+        Relationships: []
+      }
       leaderboard: {
         Row: {
           avatar_url: string | null

@@ -212,6 +212,16 @@ Deno.serve(async (req) => {
 
     console.log('Server-calculated score:', score, 'tier:', tier);
 
+    // Check if user already exists to determine activity type
+    const { data: existingUser } = await supabase
+      .from('leaderboard')
+      .select('id, score, tier')
+      .eq('fid', user.fid)
+      .maybeSingle();
+
+    const isNewUser = !existingUser;
+    const previousTier = existingUser?.tier;
+
     // Upsert to leaderboard with server-verified data only
     const { data, error } = await supabase
       .from('leaderboard')
@@ -247,6 +257,38 @@ Deno.serve(async (req) => {
     }
 
     console.log('Saved successfully:', data);
+
+    // Create activity for the live feed
+    let activityType = 'score_updated';
+    let activityData: Record<string, unknown> = { score, tier };
+
+    if (isNewUser) {
+      activityType = 'joined';
+      activityData = { score, tier };
+    } else if (previousTier && previousTier !== tier) {
+      activityType = 'tier_achieved';
+      activityData = { score, tier, previousTier };
+    }
+
+    // Insert activity (non-blocking, we don't wait for result)
+    supabase
+      .from('activities')
+      .insert({
+        fid: user.fid,
+        username: user.username,
+        avatar_url: user.pfp_url,
+        action_type: activityType,
+        action_data: activityData,
+      })
+      .then(({ error: activityError }) => {
+        if (activityError) {
+          console.error('Activity insert error:', activityError);
+        } else {
+          console.log('Activity created:', activityType);
+        }
+      });
+
+    console.log('Activity queued:', activityType);
 
     return new Response(
       JSON.stringify({ success: true, data }),

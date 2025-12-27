@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { StickyNav } from "@/components/StickyNav";
 import { LeaderboardSkeleton } from "@/components/Skeletons";
+import { LiveActivityFeed } from "@/components/LiveActivityFeed";
 import { 
   TrendingUp, 
   Users, 
@@ -14,8 +15,8 @@ import {
   Trophy,
   ArrowLeft,
   Sparkles,
-  Flame,
-  Star
+  Star,
+  Activity
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -262,51 +263,72 @@ const Explore = () => {
       </motion.header>
 
       <main className="container mx-auto px-6 py-12">
-        {/* Hero */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <h1 className="font-display font-black text-4xl md:text-5xl mb-4">
-            DISCOVER <span className="text-gradient-primary">NINERS</span>
-          </h1>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Explore top performers, rising stars, and community leaders across the Farcaster ecosystem.
-          </p>
-        </motion.div>
-
-        {loading ? (
-          <LeaderboardSkeleton />
-        ) : categories.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center py-20"
-          >
-            <Users className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
-            <h3 className="font-display font-bold text-xl mb-2">No users yet</h3>
-            <p className="text-muted-foreground mb-6">
-              Be the first to claim your Niner Score!
-            </p>
-            <Link to="/">
-              <Button variant="farcaster">Get Your Score</Button>
-            </Link>
-          </motion.div>
-        ) : (
+        <div className="grid lg:grid-cols-[1fr_320px] gap-8">
+          {/* Main content */}
           <div>
-            {categories.map((section, index) => (
+            {/* Hero */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center lg:text-left mb-12"
+            >
+              <h1 className="font-display font-black text-4xl md:text-5xl mb-4">
+                DISCOVER <span className="text-gradient-primary">NINERS</span>
+              </h1>
+              <p className="text-muted-foreground text-lg max-w-2xl">
+                Explore top performers, rising stars, and community leaders across the Farcaster ecosystem.
+              </p>
+            </motion.div>
+
+            {loading ? (
+              <LeaderboardSkeleton />
+            ) : categories.length === 0 ? (
               <motion.div
-                key={section.title}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+                className="text-center py-20"
               >
-                <CategoryGrid section={section} />
+                <Users className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+                <h3 className="font-display font-bold text-xl mb-2">No users yet</h3>
+                <p className="text-muted-foreground mb-6">
+                  Be the first to claim your Niner Score!
+                </p>
+                <Link to="/">
+                  <Button variant="farcaster">Get Your Score</Button>
+                </Link>
               </motion.div>
-            ))}
+            ) : (
+              <div>
+                {categories.map((section, index) => (
+                  <motion.div
+                    key={section.title}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <CategoryGrid section={section} />
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Sidebar with Live Activity */}
+          <motion.aside
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="hidden lg:block"
+          >
+            <div className="sticky top-24 bg-card/50 backdrop-blur-sm border border-border rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Activity className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium text-muted-foreground">Real-time updates</span>
+              </div>
+              <LiveActivityFeed limit={12} compact />
+            </div>
+          </motion.aside>
+        </div>
       </main>
 
       <StickyNav />
