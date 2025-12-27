@@ -19,7 +19,6 @@ const queryClient = new QueryClient();
 
 const BaseAppInitializer = () => {
   useEffect(() => {
-    // Base App detection
     const isBaseApp = window.self !== window.top || 
                      window.location.search.includes('mini_app=true') ||
                      navigator.userAgent.includes('Farcaster') ||
@@ -27,11 +26,9 @@ const BaseAppInitializer = () => {
                      window.location.hostname === 'www.neynar-card-craft.fun';
     
     if (isBaseApp) {
-      console.log('🔍 Base/Farcaster Mini App detected');
+      console.log('Base/Farcaster Mini App detected');
       
-      // Method 1: Send multiple ready signals
       const sendReadySignal = () => {
-        // Base App expects this exact format
         const message = {
           type: 'ready',
           data: {
@@ -42,29 +39,25 @@ const BaseAppInitializer = () => {
           }
         };
         
-        console.log('📤 Sending ready signal:', message);
+        console.log('Sending ready signal:', message);
         window.parent.postMessage(message, '*');
       };
       
-      // Send immediately
       sendReadySignal();
       
-      // Send multiple times (Base App might miss first)
       const intervals = [100, 500, 1000, 2000, 3000, 5000];
       intervals.forEach(delay => {
         setTimeout(sendReadySignal, delay);
       });
       
-      // Listen for Base response
       window.addEventListener('message', (event) => {
-        console.log('📩 Received message:', event.data);
+        console.log('Received message:', event.data);
         
         if (event.data && event.data.type === 'ready_ack') {
-          console.log('✅ Base App acknowledged ready signal');
+          console.log('Base App acknowledged ready signal');
         }
         
         if (event.data && event.data.type === 'ping') {
-          // Respond to ping
           window.parent.postMessage({
             type: 'pong',
             timestamp: Date.now()
@@ -72,27 +65,13 @@ const BaseAppInitializer = () => {
         }
       });
       
-      // Add Base App class to body
       document.body.classList.add('base-app');
       document.documentElement.style.height = '100%';
       document.body.style.height = '100%';
-      
-      // Method 2: Try Base App SDK if available
-      if (window.base) {
-        console.log('🎯 Base App SDK found');
-        window.base.ready();
-      }
-      
-      // Method 3: Try Farcaster Frame API
-      if (window.farcaster) {
-        console.log('🎯 Farcaster SDK found');
-        window.farcaster.ready();
-      }
     }
   }, []);
   
   return null;
-};
 };
 
 const App = () => {
