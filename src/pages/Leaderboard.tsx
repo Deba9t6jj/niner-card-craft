@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { StickyNav } from "@/components/StickyNav";
 import { LeaderboardSkeleton } from "@/components/Skeletons";
-import { Trophy, Medal, Crown, Gem, ArrowLeft, Loader2, TrendingUp, Flame, Sparkles } from "lucide-react";
+import { Trophy, Medal, Crown, Gem, ArrowLeft, Loader2, TrendingUp, Flame, Sparkles, Users, Heart, Zap, Wallet } from "lucide-react";
 
 interface LeaderboardEntry {
   id: string;
@@ -20,7 +20,25 @@ interface LeaderboardEntry {
   nft_minted: boolean | null;
   base_score: number | null;
   combined_score: number | null;
+  engagement: number | null;
 }
+
+type FilterType = 'score' | 'casts' | 'followers' | 'engagement' | 'base';
+
+interface FilterOption {
+  id: FilterType;
+  label: string;
+  icon: React.ReactNode;
+  description: string;
+}
+
+const filterOptions: FilterOption[] = [
+  { id: 'score', label: 'Top Score', icon: <Trophy className="w-4 h-4" />, description: 'Overall Niner Score' },
+  { id: 'casts', label: 'Most Active', icon: <Flame className="w-4 h-4" />, description: 'Most casts posted' },
+  { id: 'followers', label: 'Most Followed', icon: <Users className="w-4 h-4" />, description: 'Largest following' },
+  { id: 'engagement', label: 'Best Engagement', icon: <Heart className="w-4 h-4" />, description: 'Highest engagement rate' },
+  { id: 'base', label: 'Top Base', icon: <Wallet className="w-4 h-4" />, description: 'Highest Base chain score' },
+];
 
 const tierIcons: Record<string, React.ReactNode> = {
   diamond: <Gem className="w-5 h-5 text-tier-diamond" />,
@@ -96,6 +114,7 @@ const TiltLeaderboardCard = ({ children, isTop3, tierColor }: { children: React.
 const Leaderboard = () => {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState<FilterType>('score');
 
   useEffect(() => {
     fetchLeaderboard();
@@ -115,6 +134,41 @@ const Leaderboard = () => {
       console.error('Error fetching leaderboard:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Sort entries based on active filter
+  const sortedEntries = [...entries].sort((a, b) => {
+    switch (activeFilter) {
+      case 'score':
+        return (b.score || 0) - (a.score || 0);
+      case 'casts':
+        return (b.casts || 0) - (a.casts || 0);
+      case 'followers':
+        return (b.followers || 0) - (a.followers || 0);
+      case 'engagement':
+        return (Number(b.engagement) || 0) - (Number(a.engagement) || 0);
+      case 'base':
+        return (b.base_score || 0) - (a.base_score || 0);
+      default:
+        return 0;
+    }
+  });
+
+  const getFilterValue = (entry: LeaderboardEntry): string | number => {
+    switch (activeFilter) {
+      case 'score':
+        return entry.score;
+      case 'casts':
+        return entry.casts?.toLocaleString() || '0';
+      case 'followers':
+        return entry.followers?.toLocaleString() || '0';
+      case 'engagement':
+        return `${Number(entry.engagement || 0).toFixed(1)}%`;
+      case 'base':
+        return entry.base_score || 0;
+      default:
+        return entry.score;
     }
   };
 
@@ -199,12 +253,54 @@ const Leaderboard = () => {
             The highest scoring Farcaster users. Claim your spot on the leaderboard.
           </p>
           
-          {/* Stats bar */}
+          {/* Filter Tabs */}
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="flex items-center justify-center gap-6 mt-6"
+            className="flex flex-wrap items-center justify-center gap-2 mt-8 mb-4"
+          >
+            {filterOptions.map((filter) => (
+              <motion.button
+                key={filter.id}
+                onClick={() => setActiveFilter(filter.id)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  activeFilter === filter.id 
+                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30' 
+                    : 'bg-card/50 text-muted-foreground border border-border/50 hover:border-primary/30 hover:text-foreground'
+                }`}
+              >
+                {filter.icon}
+                <span className="hidden sm:inline">{filter.label}</span>
+                {activeFilter === filter.id && (
+                  <motion.div
+                    layoutId="activeFilter"
+                    className="absolute inset-0 bg-primary rounded-xl -z-10"
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
+              </motion.button>
+            ))}
+          </motion.div>
+
+          {/* Active filter description */}
+          <motion.p
+            key={activeFilter}
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-sm text-muted-foreground mb-6"
+          >
+            {filterOptions.find(f => f.id === activeFilter)?.description}
+          </motion.p>
+          
+          {/* Stats bar */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="flex items-center justify-center gap-6"
           >
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-card/50 border border-border/50">
               <Flame className="w-4 h-4 text-tier-gold" />
@@ -232,9 +328,10 @@ const Leaderboard = () => {
           </motion.div>
         ) : (
           <div className="max-w-4xl mx-auto space-y-3">
-            {entries.map((entry, index) => {
+            {sortedEntries.map((entry, index) => {
               const isTop3 = index < 3;
               const scoreChange = getScoreChange(index);
+              const displayValue = getFilterValue(entry);
               
               return (
                 <TiltLeaderboardCard key={entry.id} isTop3={isTop3} tierColor={tierColors[entry.tier]}>
@@ -338,31 +435,24 @@ const Leaderboard = () => {
                           )}
                         </div>
 
-                        {/* Score with change indicator */}
+                        {/* Dynamic score based on filter */}
                         <div className="text-right">
                           <motion.div 
-                            className="px-4 py-2 rounded-xl flex items-center gap-2"
+                            className="px-4 py-2 rounded-xl flex flex-col items-end gap-0.5"
                             style={{ 
                               backgroundColor: `${tierColors[entry.tier]}20`,
                             }}
                             whileHover={{ scale: 1.05 }}
                           >
+                            <span className="text-xs text-muted-foreground">
+                              {filterOptions.find(f => f.id === activeFilter)?.label}
+                            </span>
                             <span 
                               className="font-display font-black text-2xl"
                               style={{ color: tierColors[entry.tier] }}
                             >
-                              {entry.score}
+                              {displayValue}
                             </span>
-                            {scoreChange !== 0 && (
-                              <motion.div 
-                                initial={{ opacity: 0, y: 5 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className={`flex items-center text-xs font-bold ${scoreChange > 0 ? 'text-green-400' : 'text-red-400'}`}
-                              >
-                                <TrendingUp className={`w-3 h-3 ${scoreChange < 0 ? 'rotate-180' : ''}`} />
-                                <span>{Math.abs(scoreChange)}</span>
-                              </motion.div>
-                            )}
                           </motion.div>
                         </div>
                       </div>
