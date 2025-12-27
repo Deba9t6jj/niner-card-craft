@@ -13,8 +13,43 @@ import Cards from "./pages/Cards";
 import Leaderboard from "./pages/Leaderboard";
 import Explore from "./pages/Explore";
 import Profile from "./pages/Profile";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient();
+
+const BaseAppInitializer = () => {
+  useEffect(() => {
+    const isBaseApp = window.self !== window.top || 
+                     window.location.search.includes('mini_app=true') ||
+                     navigator.userAgent.includes('Farcaster') ||
+                     navigator.userAgent.includes('Base');
+    
+    if (isBaseApp) {
+      console.log('Base/Farcaster Mini App detected');
+      
+      const sendReadySignal = () => {
+        window.parent.postMessage({
+          type: 'ready',
+          version: '1.0.0',
+          app: 'Niner Score',
+          timestamp: Date.now()
+        }, '*');
+      };
+      
+      sendReadySignal();
+      setTimeout(sendReadySignal, 1000);
+      setTimeout(sendReadySignal, 3000);
+      
+      window.addEventListener('message', (event) => {
+        if (event.data.type === 'base_ready') {
+          console.log('Base App confirmed ready');
+        }
+      });
+    }
+  }, []);
+  
+  return null;
+};
 
 const App = () => {
   return (
@@ -25,6 +60,7 @@ const App = () => {
             <TooltipProvider>
               <Toaster />
               <Sonner />
+              <BaseAppInitializer />
               <BrowserRouter>
                 <Routes>
                   <Route path="/" element={<Layout />}>
