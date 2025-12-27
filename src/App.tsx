@@ -10,6 +10,7 @@ import { config } from '@/lib/wagmi';
 import Index from "./pages/Index";
 import Layout from "./pages/Layout";
 import Cards from "./pages/Cards";
+import Leaderboard from "./pages/Leaderboard";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => {
               <Route path="/" element={<Layout />}>
                 <Route index element={<Index />} />
                 <Route path="cards" element={<Cards />} />
+                <Route path="leaderboard" element={<Leaderboard />} />
               </Route>
             </Routes>
           </BrowserRouter>
