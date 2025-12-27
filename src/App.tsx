@@ -22,8 +22,7 @@ const BaseAppInitializer = () => {
     const isBaseApp = window.self !== window.top || 
                      window.location.search.includes('mini_app=true') ||
                      navigator.userAgent.includes('Farcaster') ||
-                     navigator.userAgent.includes('Base') ||
-                     window.location.hostname === 'www.neynar-card-craft.fun';
+                     navigator.userAgent.includes('Base');
     
     if (isBaseApp) {
       console.log('Base/Farcaster Mini App detected');
@@ -39,35 +38,14 @@ const BaseAppInitializer = () => {
           }
         };
         
-        console.log('Sending ready signal:', message);
         window.parent.postMessage(message, '*');
       };
       
       sendReadySignal();
       
-      const intervals = [100, 500, 1000, 2000, 3000, 5000];
-      intervals.forEach(delay => {
+      [100, 500, 1000, 2000, 3000, 5000].forEach(delay => {
         setTimeout(sendReadySignal, delay);
       });
-      
-      window.addEventListener('message', (event) => {
-        console.log('Received message:', event.data);
-        
-        if (event.data && event.data.type === 'ready_ack') {
-          console.log('Base App acknowledged ready signal');
-        }
-        
-        if (event.data && event.data.type === 'ping') {
-          window.parent.postMessage({
-            type: 'pong',
-            timestamp: Date.now()
-          }, '*');
-        }
-      });
-      
-      document.body.classList.add('base-app');
-      document.documentElement.style.height = '100%';
-      document.body.style.height = '100%';
     }
   }, []);
   
