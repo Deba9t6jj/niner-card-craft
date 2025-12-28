@@ -13,7 +13,7 @@ import { useMiniApp } from "@/contexts/MiniAppContext";
 const Index = () => {
   const { isConnecting, isConnected, data, connectByUsername, disconnect, refresh, isMiniApp } = useFarcasterAuth();
   const { setPrimaryButton, hidePrimaryButton } = usePrimaryButton();
-  const { user: miniAppUser } = useMiniApp();
+  const { farcasterUser: miniAppUser } = useMiniApp();
   const heroInputRef = useRef<{ focusInput: () => void } | null>(null);
 
   // Set up primary button for landing page (Get Your Score)

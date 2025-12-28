@@ -1,5 +1,4 @@
 // src/lib/farcaster.ts
-import { supabase } from '@/integrations/supabase/client';
 
 export interface FarcasterUser {
   fid: number;
@@ -13,19 +12,7 @@ export interface FarcasterUser {
 
 export async function getFarcasterUserByFid(fid: number): Promise<FarcasterUser | null> {
   try {
-    // First check if we have cached data in Supabase
-    const { data: cached, error: cacheError } = await supabase
-      .from('farcaster_profiles')
-      .select('*')
-      .eq('fid', fid)
-      .maybeSingle();
-
-    if (!cacheError && cached) {
-      console.log('✅ Using cached Farcaster data');
-      return cached as FarcasterUser;
-    }
-
-    // If not cached, fetch from Neynar API (you need to add your API key)
+    // Fetch from Neynar API
     const NEYNAR_API_KEY = import.meta.env.VITE_NEYNAR_API_KEY;
     
     if (!NEYNAR_API_KEY) {
@@ -57,22 +44,8 @@ export async function getFarcasterUserByFid(fid: number): Promise<FarcasterUser 
         avatar_url: data.user.pfp_url,
         followers: data.user.follower_count,
         following: data.user.following_count,
-        casts: data.user.casts,
+        casts: data.user.casts || 0,
       };
-
-      // Cache in Supabase for future use
-      await supabase
-        .from('farcaster_profiles')
-        .upsert({
-          fid: userData.fid,
-          username: userData.username,
-          display_name: userData.display_name,
-          avatar_url: userData.avatar_url,
-          followers: userData.followers,
-          following: userData.following,
-          casts: userData.casts,
-          updated_at: new Date().toISOString(),
-        });
 
       return userData;
     }
@@ -117,7 +90,7 @@ export async function getFarcasterUserByUsername(username: string): Promise<Farc
         avatar_url: data.user.pfp_url,
         followers: data.user.follower_count,
         following: data.user.following_count,
-        casts: data.user.casts,
+        casts: data.user.casts || 0,
       };
     }
 
