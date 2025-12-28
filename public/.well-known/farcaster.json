@@ -6,36 +6,22 @@
   },
   "miniapp": {
     "version": "1",
-    "name": "Niner Score",
+    "name": "Niner Card Craft",
     "homeUrl": "https://www.neynar-card-craft.fun",
-    "iconUrl": "https://www.neynar-card-craft.fun/logo.png",
+    "iconUrl": "https://www.neynar-card-craft.fun/icon.png",
     "splashImageUrl": "https://www.neynar-card-craft.fun/splash.png",
-<<<<<<< HEAD
     "splashBackgroundColor": "#000000",
-    "webhookUrl": "",
-    "subtitle": "Your Farcaster Reputation NFT",
-    "description": "Connect your Farcaster account and receive a unique NFT identity card based on your social reputation.",
+    "subtitle": "Create and Share Custom Cards",
+    "description": "Create beautiful custom cards and share them on Farcaster and Base",
     "screenshotUrls": [
-      "https://www.neynar-card-craft.fun/screenshot.png"
+      "https://www.neynar-card-craft.fun/screenshot1.png"
     ],
     "primaryCategory": "social",
-    "tags": ["farcaster", "nft", "social", "reputation"],
+    "tags": ["farcaster", "cards", "social", "creative", "nft"],
     "heroImageUrl": "https://www.neynar-card-craft.fun/og-image.png",
-    "tagline": "Claim Your Identity Card",
-    "ogTitle": "Niner Score",
-    "ogDescription": "Your Farcaster Reputation NFT",
-=======
-    "splashBackgroundColor": "#0a0a0f",
-    "subtitle": "Your Farcaster Reputation NFT",
-    "description": "Get your Farcaster reputation NFT card. Bronze to Diamond tiers based on engagement.",
-    "screenshotUrls": [],
-    "primaryCategory": "social",
-    "tags": ["farcaster", "nft", "social", "reputation", "identity"],
-    "heroImageUrl": "https://www.neynar-card-craft.fun/og-image.png",
-    "tagline": "Claim Your Social Identity",
-    "ogTitle": "Niner Score — Farcaster NFT",
-    "ogDescription": "Free NFT Identity Cards for Farcaster based on your social reputation score.",
->>>>>>> e2090492a8b1134ea762d0f140d6cb54e5ca3461
+    "tagline": "Design Your Card",
+    "ogTitle": "Niner Card Craft",
+    "ogDescription": "Create and share custom cards on Base and Farcaster",
     "ogImageUrl": "https://www.neynar-card-craft.fun/og-image.png",
     "noindex": false
   }
