@@ -9,6 +9,7 @@ import { TopProgressBar } from "@/components/PageLoader";
 import { LiveActivityFeed } from "@/components/LiveActivityFeed";
 import { usePrimaryButton } from "@/hooks/usePrimaryButton";
 import { useMiniApp } from "@/contexts/MiniAppContext";
+import FloatingLines from "@/components/FloatingLines";
 
 const Index = () => {
   const { isConnecting, isConnected, data, connectByUsername, disconnect, refresh, isMiniApp } = useFarcasterAuth();
@@ -64,6 +65,25 @@ const Index = () => {
 
   return (
     <main className="relative">
+      {/* Floating Lines Background */}
+      <div className="fixed inset-0 z-0 pointer-events-auto">
+        <FloatingLines
+          linesGradient={['#8B5CF6', '#6366F1', '#3B82F6']}
+          enabledWaves={[true, true, true]}
+          lineCount={6}
+          lineDistance={0.025}
+          topWavePosition={0.8}
+          middleWavePosition={0.5}
+          bottomWavePosition={0.2}
+          animationSpeed={0.8}
+          interactive={true}
+          bendRadius={0.25}
+          bendStrength={1.2}
+          parallax={true}
+          parallaxStrength={0.03}
+          mixBlendMode="screen"
+        />
+      </div>
       <TopProgressBar isLoading={isConnecting} />
       <HeroSection onConnect={connectByUsername} isConnecting={isConnecting} />
       
