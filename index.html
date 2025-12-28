@@ -4,9 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     
-    <!-- ===================== -->
-    <!-- BASE APP METADATA -->
-    <!-- ===================== -->
     <meta name="base:app_id" content="69458651d19763ca26ddc571" />
     <meta property="base:app" content="Niner Score" />
     <meta property="base:network" content="base" />
@@ -15,10 +12,6 @@
     <meta property="base:category" content="social" />
     <meta property="base:supported_chains" content="base,optimism,arbitrum" />
     
-    <!-- ===================== -->
-    <!-- FARCASTER FRAME METADATA -->
-    <!-- ===================== -->
-    <!-- Core Frame Tags -->
     <meta property="fc:frame" content="vNext" />
     <meta property="fc:frame:image" content="https://www.neynar-card-craft.fun/og-image.png" />
     <meta property="fc:frame:image:aspect_ratio" content="1.91:1" />
@@ -32,18 +25,13 @@
     <meta property="fc:frame:button:3:action" content="post_redirect" />
     <meta property="fc:frame:input:text" content="Enter Farcaster username (e.g., deba9t6)" />
     
-    <!-- Frame State & Context -->
     <meta property="fc:frame:state" content='{"app":"niner-score","version":"1.0"}' />
     
-    <!-- ===================== -->
-    <!-- FARCASTER MINI APP FEATURES -->
-    <!-- ===================== -->
     <meta name="fc:feature" content="frames" />
     <meta name="fc:feature" content="cast_action" />
     <meta name="fc:feature" content="mini_app" />
     <meta name="fc:feature" content="embedded" />
     
-    <!-- Open Frames Compatibility -->
     <meta name="of:version" content="vNext" />
     <meta name="of:accepts:push" content="mint" />
     <meta name="of:accepts:push" content="frame" />
@@ -51,30 +39,20 @@
     <meta name="of:image" content="https://www.neynar-card-craft.fun/og-image.png" />
     <meta name="of:post_url" content="https://www.neynar-card-craft.fun/api/frame" />
     
-    <!-- Cast Action for Warpcast -->
     <link rel="cast-action" href="https://www.neynar-card-craft.fun/cast-action.json" />
     
-    <!-- ===================== -->
-    <!-- NEYNAR INTEGRATION -->
-    <!-- ===================== -->
     <meta name="neynar:app" content="niner-score" />
     <meta name="neynar:api_version" content="2024-01-01" />
     <meta name="neynar:features" content="frame,cast_action,mini_app,identity" />
     
-    <!-- ===================== -->
-    <!-- YOUR EXISTING METADATA -->
-    <!-- ===================== -->
-    <!-- Favicon -->
     <link rel="icon" type="image/png" href="/icon.png" />
     <link rel="apple-touch-icon" href="/icon.png" />
     
-    <!-- Title & Description -->
     <title>Niner Score | Farcaster Reputation NFT Identity Cards</title>
     <meta name="description" content="Get your free NFT identity card based on your Farcaster engagement score. Bronze, Silver, Gold, or Diamond — claim your tier now." />
     <meta name="keywords" content="Farcaster, NFT, identity card, social reputation, Web3, Base, OpenSea" />
     <meta name="author" content="Niner Score" />
     
-    <!-- Farcaster/Base Mini App Embed Metadata -->
     <meta name="fc:miniapp" content='{
       "version": "next",
       "imageUrl": "https://www.neynar-card-craft.fun/embed-image.png",
@@ -90,7 +68,6 @@
       }
     }' />
     
-    <!-- Open Graph Tags -->
     <meta property="og:title" content="Niner Score — Your Farcaster Reputation NFT" />
     <meta property="og:description" content="Connect your Farcaster account and receive a unique NFT identity card based on your social engagement." />
     <meta property="og:type" content="website" />
@@ -100,96 +77,19 @@
     <meta property="og:image:height" content="630" />
     <meta property="og:site_name" content="Niner Score" />
     
-    <!-- Twitter Tags -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@NinerScore" />
     <meta name="twitter:title" content="Niner Score — Your Farcaster Reputation NFT" />
     <meta name="twitter:description" content="Free NFT Identity Cards for Farcaster based on your social reputation score." />
     <meta name="twitter:image" content="https://www.neynar-card-craft.fun/og-image.png" />
     
-    <!-- Canonical URL -->
     <link rel="canonical" href="https://www.neynar-card-craft.fun" />
     
-    <!-- Theme Color for Mobile Browsers -->
     <meta name="theme-color" content="#0a0a0f" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     
-    <!-- ===================== -->
-    <!-- BASE APP COMMUNICATION SCRIPT (ADDED) -->
-    <!-- ===================== -->
-    <script>
-        // Base App Communication Script
-        (function() {
-            // Function to send ready signal to Base App
-            function sendBaseReady() {
-                if (window.self !== window.parent) {
-                    const messages = [
-                        { type: 'ready' },
-                        { type: 'mini_app_ready' },
-                        { type: 'app_ready', app: 'Niner Score', version: '1.0.0' },
-                        'ready',
-                        'mini_app_ready',
-                        { status: 'ready', app: 'niner-score' },
-                        { event: 'ready', source: 'mini-app' }
-                    ];
-                    
-                    messages.forEach(msg => {
-                        try {
-                            window.parent.postMessage(msg, '*');
-                            console.log('📤 Sent ready signal to Base:', msg);
-                        } catch (e) {
-                            console.log('Error sending message:', e);
-                        }
-                    });
-                    return true;
-                }
-                return false;
-            }
-            
-            // Send immediately when script loads
-            if (window.self !== window.parent) {
-                console.log('🚀 Base App environment detected (pre-React)');
-                
-                // Send initial signal
-                setTimeout(sendBaseReady, 50);
-                
-                // Send multiple times with delays
-                [100, 300, 600, 1000, 2000, 5000].forEach(delay => {
-                    setTimeout(sendBaseReady, delay);
-                });
-                
-                // Listen for Base App responses
-                window.addEventListener('message', function(event) {
-                    if (event.data?.type === 'ready_ack' || 
-                        event.data === 'ready_ack' ||
-                        event.data?.status === 'acknowledged') {
-                        console.log('🎉 Base App acknowledged!');
-                        // Update UI to show ready state
-                        document.body.classList.add('base-app-ready');
-                    }
-                    
-                    // Handle Farcaster user data
-                    if (event.data?.type === 'farcaster_user') {
-                        console.log('👤 Farcaster user received:', event.data.user);
-                        localStorage.setItem('farcaster_user', JSON.stringify(event.data.user));
-                    }
-                });
-                
-                // Expose function for React to use
-                window.sendBaseReady = sendBaseReady;
-                
-                // Add Base App CSS class
-                document.body.classList.add('base-app-environment');
-            }
-        })();
-    </script>
-    
-    <!-- ===================== -->
-    <!-- MINI APP STYLES -->
-    <!-- ===================== -->
     <style>
-        /* Base App Environment */
         body.base-app-environment {
             background: #0a0a0f;
             margin: 0;
@@ -210,7 +110,6 @@
             z-index: 9999;
         }
         
-        /* Mini App Detection & Styling */
         body.mini-app {
             background: #0a0a0f;
             margin: 0;
@@ -240,10 +139,8 @@
     </style>
 </head>
 <body>
-    <!-- Your React App Root -->
     <div id="root"></div>
     
-    <!-- Mini App Fallback UI (hidden by default) -->
     <div id="mini-app-fallback" style="display: none;">
         <div class="mini-app-header">
             <h1 style="color: white; margin: 0;">🎯 Niner Score</h1>
@@ -262,14 +159,57 @@
     
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- Mini App Initialization -->
     <script>
-        // Function to detect and handle mini app mode
+        window.BASE_APP_FIX = true;
+        
+        function sendReadyToBaseApp() {
+            if (window.self !== window.parent) {
+                const signals = [
+                    'ready',
+                    'READY',
+                    'Ready',
+                    'mini_app_ready',
+                    'app_ready',
+                    JSON.stringify({type: 'ready'}),
+                    JSON.stringify({event: 'ready', app: 'niner-score'}),
+                    JSON.stringify({status: 'ready', source: 'iframe'}),
+                    JSON.stringify({action: 'ready', timestamp: Date.now()}),
+                    JSON.stringify({ready: true})
+                ];
+                
+                signals.forEach(signal => {
+                    try {
+                        window.parent.postMessage(signal, '*');
+                    } catch(e) {}
+                });
+                
+                return true;
+            }
+            return false;
+        }
+        
+        if (window.self !== window.parent) {
+            console.log('Base App iframe detected, sending ready signals...');
+            
+            sendReadyToBaseApp();
+            
+            [100, 300, 600, 1000, 2000, 3000, 5000, 10000].forEach(delay => {
+                setTimeout(sendReadyToBaseApp, delay);
+            });
+            
+            window.addEventListener('load', function() {
+                setTimeout(sendReadyToBaseApp, 100);
+            });
+            
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(sendReadyToBaseApp, 50);
+            });
+        }
+        
         function initializeMiniApp() {
             const isMiniApp = document.body.classList.contains('mini-app');
             
             if (isMiniApp) {
-                // Show mini app fallback UI if React app doesn't load
                 setTimeout(() => {
                     if (!document.getElementById('root').children.length) {
                         document.getElementById('mini-app-fallback').style.display = 'block';
@@ -283,7 +223,6 @@
             const username = document.getElementById('username-input').value;
             if (!username) return;
             
-            // Call your API to get score
             fetch(`https://www.neynar-card-craft.fun/api/score?username=${encodeURIComponent(username)}`)
                 .then(response => response.json())
                 .then(data => {
@@ -294,19 +233,14 @@
                 });
         }
         
-        // Initialize when DOM is loaded
         document.addEventListener('DOMContentLoaded', initializeMiniApp);
         
-        // Export functions for React app to use
         window.ReactApp = window.ReactApp || {};
         window.ReactApp.isMiniApp = function() {
             return document.body.classList.contains('mini-app');
         };
         
-        // If Base App communication script loaded, send one more ready signal
-        if (window.sendBaseReady) {
-            setTimeout(window.sendBaseReady, 1500);
-        }
+        window.sendReadyToBaseApp = sendReadyToBaseApp;
     </script>
 </body>
 </html>
