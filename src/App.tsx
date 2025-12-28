@@ -18,17 +18,65 @@ import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
+// Check if we're in Base App context
+const isInBaseApp = () => {
+  if (typeof window === 'undefined') return false;
+  
+  // Check multiple ways Base App might signal
+  const isIframe = window.self !== window.top;
+  const hasBaseParam = window.location.search.includes('mini_app') || 
+                      window.location.search.includes('base') ||
+                      window.location.search.includes('farcaster');
+  const parentIsBase = window.parent && 
+                      (window.parent.location.hostname.includes('base.org') ||
+                       window.parent.location.hostname.includes('farcaster.xyz'));
+  
+  return isIframe || hasBaseParam || parentIsBase;
+};
+
 const App = () => {
   useEffect(() => {
-    console.log('Base Mini App initializing...');
+    console.log('🔍 Checking Base App context...');
+    console.log('Is iframe?', window.self !== window.top);
+    console.log('URL params:', window.location.search);
+    console.log('Parent:', window.parent?.location?.hostname);
     
-    // Base SDK ready call - SIMPLE VERSION
-    try {
-      sdk.actions.ready()
-        .then(() => console.log('✅ Base Mini App READY!'))
-        .catch(error => console.log('Not in Base context:', error));
-    } catch (error) {
-      console.log('SDK not available:', error);
+    if (isInBaseApp()) {
+      console.log('✅ IN BASE APP CONTEXT - Calling ready()');
+      
+      // Multiple attempts to call ready()
+      const callReady = () => {
+        try {
+          if (window.sdk && window.sdk.actions) {
+            window.sdk.actions.ready()
+              .then(() => console.log('🎉 Base SDK ready() successful!'))
+              .catch(e => console.log('Base SDK ready() error:', e));
+          } else if (sdk && sdk.actions) {
+            sdk.actions.ready()
+              .then(() => console.log('🎉 Base SDK ready() successful!'))
+              .catch(e => console.log('Base SDK ready() error:', e));
+          }
+        } catch (error) {
+          console.log('Error calling ready():', error);
+        }
+      };
+      
+      // Call immediately
+      callReady();
+      
+      // Call multiple times with delays
+      setTimeout(callReady, 100);
+      setTimeout(callReady, 500);
+      setTimeout(callReady, 1000);
+      setTimeout(callReady, 2000);
+      
+      // Also try window.postMessage method
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage('mini_app_ready', '*');
+        window.parent.postMessage({ type: 'ready', app: 'niner-card-craft' }, '*');
+      }
+    } else {
+      console.log('🌐 Running as normal web app (not in Base context)');
     }
   }, []);
 
