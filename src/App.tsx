@@ -7,6 +7,7 @@ import { WagmiProvider } from 'wagmi';
 import { ThemeProvider } from "next-themes";
 import { config } from '@/lib/wagmi';
 import { MiniAppProvider } from '@/contexts/MiniAppContext';
+import TargetCursor from "@/components/TargetCursor";
 import Index from "./pages/Index";
 import Layout from "./pages/Layout";
 import Cards from "./pages/Cards";
@@ -24,6 +25,7 @@ const App = () => {
         <QueryClientProvider client={queryClient}>
           <MiniAppProvider>
             <TooltipProvider>
+              <TargetCursor targetSelector=".cursor-target" />
               <Toaster />
               <Sonner />
               <BrowserRouter>
