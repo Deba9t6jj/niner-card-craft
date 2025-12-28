@@ -1,5 +1,3 @@
-import { sdk } from '@farcaster/miniapp-sdk';
-import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,19 +16,7 @@ import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
-
 const App = () => {
-  React.useEffect(() => {
-    const initMiniApp = async () => {
-      try {
-        await sdk.actions.ready();
-        console.log('Mini App SDK ready');
-      } catch (error) {
-        console.error('Mini App SDK error:', error);
-      }
-    };
-    initMiniApp();
-  }, []);
 
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
