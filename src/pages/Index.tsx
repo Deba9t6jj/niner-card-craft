@@ -68,7 +68,7 @@ const Index = () => {
       {/* Floating Lines Background */}
       <div className="fixed inset-0 z-0 pointer-events-auto">
         <FloatingLines
-          linesGradient={['#8B5CF6', '#6366F1', '#3B82F6']}
+          linesGradient={['#7C3AED', '#8B5CF6', '#0066FF']}
           enabledWaves={[true, true, true]}
           lineCount={6}
           lineDistance={0.025}
