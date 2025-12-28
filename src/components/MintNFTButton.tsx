@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useConnect, useAccount, useDisconnect, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 import { parseEther } from 'viem';
 import { base } from 'wagmi/chains';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Wallet, Loader2, Check, ExternalLink } from 'lucide-react';
+import { Wallet, Loader2, Check, ExternalLink, Smartphone } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { NINER_NFT_CONTRACT, ninerNftAbi } from '@/lib/wagmi';
+import { useMiniAppWallet } from '@/hooks/useMiniAppWallet';
 
 interface MintNFTButtonProps {
   fid: number;
@@ -23,13 +24,22 @@ interface MintNFTButtonProps {
   };
 }
 
-export function MintNFTButton({ fid, username, displayName, score, tier, avatarUrl, stats }: MintNFTButtonProps) {
+export interface MintNFTButtonHandle {
+  triggerMint: () => void;
+  triggerConnect: () => void;
+}
+
+export const MintNFTButton = forwardRef<MintNFTButtonHandle, MintNFTButtonProps>(
+  ({ fid, username, displayName, score, tier, avatarUrl, stats }, ref) => {
   const { toast } = useToast();
-  const { address, isConnected } = useAccount();
+  const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount();
   const { connect, isPending: isConnecting } = useConnect();
   const { disconnect } = useDisconnect();
   const [isMinting, setIsMinting] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
+  
+  // Mini App wallet hook for SDK-specific features
+  const miniAppWallet = useMiniAppWallet();
 
   const { writeContract, data: hash, isPending: isWriting } = useWriteContract();
   
@@ -37,20 +47,42 @@ export function MintNFTButton({ fid, username, displayName, score, tier, avatarU
     hash,
   });
 
+  // Use Mini App address if available, otherwise use wagmi address
+  const activeAddress = miniAppWallet.address || wagmiAddress;
+  const isWalletConnected = miniAppWallet.isConnected || wagmiConnected;
+  const isMiniApp = miniAppWallet.isMiniApp;
+
+
   const handleConnect = async () => {
     try {
+      if (isMiniApp) {
+        // Use Mini App SDK wallet connection
+        await miniAppWallet.connect();
+        toast({
+          title: "Connected via Base",
+          description: "Using your Base wallet",
+        });
+        return;
+      }
+      
+      // Fallback to injected connector for browser
       connect({ connector: injected() });
     } catch (error) {
-      toast({
-        title: "Connection Failed",
-        description: "Please make sure you have a wallet installed.",
-        variant: "destructive",
-      });
+      // If Mini App connection fails, try injected
+      try {
+        connect({ connector: injected() });
+      } catch {
+        toast({
+          title: "Connection Failed",
+          description: "Please make sure you have a wallet installed.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
   const handleMint = async () => {
-    if (!address) return;
+    if (!activeAddress) return;
     
     setIsMinting(true);
     
@@ -117,6 +149,20 @@ export function MintNFTButton({ fid, username, displayName, score, tier, avatarU
     }
   };
 
+  // Expose methods to parent via ref
+  useImperativeHandle(ref, () => ({
+    triggerMint: () => {
+      if (isWalletConnected && !txHash) {
+        handleMint();
+      }
+    },
+    triggerConnect: () => {
+      if (!isWalletConnected) {
+        handleConnect();
+      }
+    },
+  }), [isWalletConnected, txHash]);
+
   if (txHash) {
     return (
       <div className="flex flex-col items-center gap-2">
@@ -134,20 +180,22 @@ export function MintNFTButton({ fid, username, displayName, score, tier, avatarU
     );
   }
 
-  if (!isConnected) {
+  if (!isWalletConnected) {
     return (
       <Button 
         variant="farcaster" 
         className="gap-2 shadow-lg shadow-farcaster/20"
         onClick={handleConnect}
-        disabled={isConnecting}
+        disabled={isConnecting || miniAppWallet.isConnecting}
       >
-        {isConnecting ? (
+        {(isConnecting || miniAppWallet.isConnecting) ? (
           <Loader2 className="w-4 h-4 animate-spin" />
+        ) : isMiniApp ? (
+          <Smartphone className="w-4 h-4" />
         ) : (
           <Wallet className="w-4 h-4" />
         )}
-        {isConnecting ? "Connecting..." : "Connect Wallet"}
+        {(isConnecting || miniAppWallet.isConnecting) ? "Connecting..." : isMiniApp ? "Connect via Base" : "Connect Wallet"}
       </Button>
     );
   }
@@ -169,10 +217,16 @@ export function MintNFTButton({ fid, username, displayName, score, tier, avatarU
       </Button>
       <div className="flex items-center gap-2">
         <span className="text-xs text-muted-foreground truncate max-w-[120px]">
-          {address?.slice(0, 6)}...{address?.slice(-4)}
+          {activeAddress?.slice(0, 6)}...{activeAddress?.slice(-4)}
         </span>
         <button 
-          onClick={() => disconnect()} 
+          onClick={() => {
+            if (miniAppWallet.isConnected) {
+              miniAppWallet.disconnect();
+            } else {
+              disconnect();
+            }
+          }} 
           className="text-xs text-destructive hover:underline"
         >
           Disconnect
@@ -180,4 +234,6 @@ export function MintNFTButton({ fid, username, displayName, score, tier, avatarU
       </div>
     </div>
   );
-}
+});
+
+MintNFTButton.displayName = 'MintNFTButton';

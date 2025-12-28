@@ -8,3 +8,12 @@ verify_jwt = false
 
 [functions.save-to-leaderboard]
 verify_jwt = false
+
+[functions.fetch-base-activity]
+verify_jwt = false
+
+[functions.update-nft-status]
+verify_jwt = false
+
+[functions.cache-base-score]
+verify_jwt = false

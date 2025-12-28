@@ -14,10 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      activities: {
+        Row: {
+          action_data: Json | null
+          action_type: string
+          avatar_url: string | null
+          created_at: string
+          fid: number | null
+          id: string
+          username: string
+        }
+        Insert: {
+          action_data?: Json | null
+          action_type: string
+          avatar_url?: string | null
+          created_at?: string
+          fid?: number | null
+          id?: string
+          username: string
+        }
+        Update: {
+          action_data?: Json | null
+          action_type?: string
+          avatar_url?: string | null
+          created_at?: string
+          fid?: number | null
+          id?: string
+          username?: string
+        }
+        Relationships: []
+      }
       leaderboard: {
         Row: {
           avatar_url: string | null
+          base_score: number | null
           casts: number | null
+          combined_score: number | null
           created_at: string
           display_name: string | null
           engagement: number | null
@@ -31,10 +63,13 @@ export type Database = {
           tier: string
           updated_at: string
           username: string
+          wallet_addresses: string[] | null
         }
         Insert: {
           avatar_url?: string | null
+          base_score?: number | null
           casts?: number | null
+          combined_score?: number | null
           created_at?: string
           display_name?: string | null
           engagement?: number | null
@@ -48,10 +83,13 @@ export type Database = {
           tier?: string
           updated_at?: string
           username: string
+          wallet_addresses?: string[] | null
         }
         Update: {
           avatar_url?: string | null
+          base_score?: number | null
           casts?: number | null
+          combined_score?: number | null
           created_at?: string
           display_name?: string | null
           engagement?: number | null
@@ -65,6 +103,7 @@ export type Database = {
           tier?: string
           updated_at?: string
           username?: string
+          wallet_addresses?: string[] | null
         }
         Relationships: []
       }

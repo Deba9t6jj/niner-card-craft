@@ -1,9 +1,11 @@
-import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Trophy, Medal, Crown, Gem, ArrowLeft, Loader2 } from "lucide-react";
+import { StickyNav } from "@/components/StickyNav";
+import { LeaderboardSkeleton } from "@/components/Skeletons";
+import { Trophy, Medal, Crown, Gem, ArrowLeft, Loader2, TrendingUp, Flame, Sparkles, Users, Heart, Zap, Wallet } from "lucide-react";
 
 interface LeaderboardEntry {
   id: string;
@@ -16,7 +18,27 @@ interface LeaderboardEntry {
   casts: number | null;
   followers: number | null;
   nft_minted: boolean | null;
+  base_score: number | null;
+  combined_score: number | null;
+  engagement: number | null;
 }
+
+type FilterType = 'score' | 'casts' | 'followers' | 'engagement' | 'base';
+
+interface FilterOption {
+  id: FilterType;
+  label: string;
+  icon: React.ReactNode;
+  description: string;
+}
+
+const filterOptions: FilterOption[] = [
+  { id: 'score', label: 'Top Score', icon: <Trophy className="w-4 h-4" />, description: 'Overall Niner Score' },
+  { id: 'casts', label: 'Most Active', icon: <Flame className="w-4 h-4" />, description: 'Most casts posted' },
+  { id: 'followers', label: 'Most Followed', icon: <Users className="w-4 h-4" />, description: 'Largest following' },
+  { id: 'engagement', label: 'Best Engagement', icon: <Heart className="w-4 h-4" />, description: 'Highest engagement rate' },
+  { id: 'base', label: 'Top Base', icon: <Wallet className="w-4 h-4" />, description: 'Highest Base chain score' },
+];
 
 const tierIcons: Record<string, React.ReactNode> = {
   diamond: <Gem className="w-5 h-5 text-tier-diamond" />,
@@ -32,9 +54,67 @@ const tierColors: Record<string, string> = {
   bronze: 'hsl(30 60% 50%)',
 };
 
+// 3D Tilt component for top 3 entries
+const TiltLeaderboardCard = ({ children, isTop3, tierColor }: { children: React.ReactNode; isTop3: boolean; tierColor: string }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  
+  const springConfig = { damping: 25, stiffness: 400 };
+  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [8, -8]), springConfig);
+  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-8, 8]), springConfig);
+  const scale = useSpring(1, springConfig);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!ref.current || !isTop3) return;
+    const rect = ref.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
+    const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
+    mouseX.set(x);
+    mouseY.set(y);
+  };
+
+  const handleMouseEnter = () => { if (isTop3) scale.set(1.02); };
+  const handleMouseLeave = () => {
+    mouseX.set(0);
+    mouseY.set(0);
+    scale.set(1);
+  };
+
+  if (!isTop3) return <>{children}</>;
+
+  return (
+    <motion.div
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      style={{ perspective: 1000 }}
+    >
+      <motion.div
+        style={{
+          rotateX,
+          rotateY,
+          scale,
+          transformStyle: "preserve-3d",
+        }}
+        className="relative"
+      >
+        {/* Glow effect for top 3 */}
+        <motion.div
+          className="absolute -inset-1 rounded-xl opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none blur-md"
+          style={{ background: `${tierColor}30` }}
+        />
+        {children}
+      </motion.div>
+    </motion.div>
+  );
+};
+
 const Leaderboard = () => {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState<FilterType>('score');
 
   useEffect(() => {
     fetchLeaderboard();
@@ -57,27 +137,81 @@ const Leaderboard = () => {
     }
   };
 
+  // Sort entries based on active filter
+  const sortedEntries = [...entries].sort((a, b) => {
+    switch (activeFilter) {
+      case 'score':
+        return (b.score || 0) - (a.score || 0);
+      case 'casts':
+        return (b.casts || 0) - (a.casts || 0);
+      case 'followers':
+        return (b.followers || 0) - (a.followers || 0);
+      case 'engagement':
+        return (Number(b.engagement) || 0) - (Number(a.engagement) || 0);
+      case 'base':
+        return (b.base_score || 0) - (a.base_score || 0);
+      default:
+        return 0;
+    }
+  });
+
+  const getFilterValue = (entry: LeaderboardEntry): string | number => {
+    switch (activeFilter) {
+      case 'score':
+        return entry.score;
+      case 'casts':
+        return entry.casts?.toLocaleString() || '0';
+      case 'followers':
+        return entry.followers?.toLocaleString() || '0';
+      case 'engagement':
+        return `${Number(entry.engagement || 0).toFixed(1)}%`;
+      case 'base':
+        return entry.base_score || 0;
+      default:
+        return entry.score;
+    }
+  };
+
   const getRankBadge = (index: number) => {
     if (index === 0) return (
-      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-amber-600 flex items-center justify-center shadow-lg shadow-yellow-500/30">
-        <span className="font-display font-bold text-lg">1</span>
-      </div>
+      <motion.div 
+        className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 via-amber-500 to-amber-600 flex items-center justify-center shadow-lg"
+        style={{ boxShadow: '0 0 30px rgba(255, 215, 0, 0.5)' }}
+        animate={{ 
+          boxShadow: ['0 0 20px rgba(255, 215, 0, 0.3)', '0 0 40px rgba(255, 215, 0, 0.6)', '0 0 20px rgba(255, 215, 0, 0.3)']
+        }}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        <Crown className="w-6 h-6 text-background" />
+      </motion.div>
     );
     if (index === 1) return (
-      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center shadow-lg shadow-gray-400/30">
-        <span className="font-display font-bold text-lg">2</span>
-      </div>
+      <motion.div 
+        className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 flex items-center justify-center shadow-lg"
+        style={{ boxShadow: '0 0 20px rgba(192, 192, 192, 0.4)' }}
+      >
+        <Medal className="w-5 h-5 text-background" />
+      </motion.div>
     );
     if (index === 2) return (
-      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-600 to-amber-800 flex items-center justify-center shadow-lg shadow-amber-600/30">
-        <span className="font-display font-bold text-lg">3</span>
-      </div>
+      <motion.div 
+        className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 flex items-center justify-center shadow-lg"
+        style={{ boxShadow: '0 0 20px rgba(205, 127, 50, 0.4)' }}
+      >
+        <Trophy className="w-5 h-5 text-background" />
+      </motion.div>
     );
     return (
-      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-        <span className="font-display font-medium text-muted-foreground">{index + 1}</span>
+      <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center border border-border/50">
+        <span className="font-display font-bold text-lg text-muted-foreground">{index + 1}</span>
       </div>
     );
+  };
+
+  // Calculate score change simulation (would come from DB in real app)
+  const getScoreChange = (index: number) => {
+    const changes = [12, 8, -3, 5, 0, -2, 15, 3, -1, 7];
+    return changes[index % changes.length];
   };
 
   return (
@@ -118,12 +252,65 @@ const Leaderboard = () => {
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             The highest scoring Farcaster users. Claim your spot on the leaderboard.
           </p>
+          
+          {/* Filter Tabs */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex flex-wrap items-center justify-center gap-2 mt-8 mb-4"
+          >
+            {filterOptions.map((filter) => (
+              <motion.button
+                key={filter.id}
+                onClick={() => setActiveFilter(filter.id)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  activeFilter === filter.id 
+                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30' 
+                    : 'bg-card/50 text-muted-foreground border border-border/50 hover:border-primary/30 hover:text-foreground'
+                }`}
+              >
+                {filter.icon}
+                <span className="hidden sm:inline">{filter.label}</span>
+                {activeFilter === filter.id && (
+                  <motion.div
+                    layoutId="activeFilter"
+                    className="absolute inset-0 bg-primary rounded-xl -z-10"
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
+              </motion.button>
+            ))}
+          </motion.div>
+
+          {/* Active filter description */}
+          <motion.p
+            key={activeFilter}
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-sm text-muted-foreground mb-6"
+          >
+            {filterOptions.find(f => f.id === activeFilter)?.description}
+          </motion.p>
+          
+          {/* Stats bar */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="flex items-center justify-center gap-6"
+          >
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-card/50 border border-border/50">
+              <Flame className="w-4 h-4 text-tier-gold" />
+              <span className="text-sm text-muted-foreground">Total Players: <span className="text-foreground font-bold">{entries.length}</span></span>
+            </div>
+          </motion.div>
         </motion.div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
+          <LeaderboardSkeleton />
         ) : entries.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -140,85 +327,146 @@ const Leaderboard = () => {
             </Link>
           </motion.div>
         ) : (
-          <div className="max-w-4xl mx-auto space-y-4">
-            {entries.map((entry, index) => (
-              <motion.div
-                key={entry.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="relative bg-card/50 backdrop-blur-sm border border-border rounded-xl p-4 hover:border-primary/30 transition-all group"
-                style={{
-                  boxShadow: index < 3 ? `0 0 20px ${tierColors[entry.tier]}20` : undefined,
-                }}
-              >
-                <div className="flex items-center gap-4">
-                  {/* Rank */}
-                  {getRankBadge(index)}
-                  
-                  {/* Avatar */}
-                  <div className="relative">
-                    {entry.avatar_url ? (
-                      <img 
-                        src={entry.avatar_url} 
-                        alt={entry.display_name || entry.username}
-                        className="w-12 h-12 rounded-full border-2 object-cover"
-                        style={{ borderColor: tierColors[entry.tier] }}
-                      />
-                    ) : (
-                      <div 
-                        className="w-12 h-12 rounded-full border-2 bg-muted flex items-center justify-center"
-                        style={{ borderColor: tierColors[entry.tier] }}
-                      >
-                        <span className="font-bold">{entry.username[0].toUpperCase()}</span>
+          <div className="max-w-4xl mx-auto space-y-3">
+            {sortedEntries.map((entry, index) => {
+              const isTop3 = index < 3;
+              const scoreChange = getScoreChange(index);
+              const displayValue = getFilterValue(entry);
+              
+              return (
+                <TiltLeaderboardCard key={entry.id} isTop3={isTop3} tierColor={tierColors[entry.tier]}>
+                  <Link to={`/profile/${entry.username}`}>
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.03 }}
+                      whileHover={{ 
+                        borderColor: tierColors[entry.tier] + '60',
+                        transition: { duration: 0.2 }
+                      }}
+                      className={`relative bg-card/50 backdrop-blur-sm border rounded-xl p-4 transition-all cursor-pointer group ${
+                        isTop3 
+                          ? 'border-2' 
+                          : 'border-border hover:border-primary/30'
+                      }`}
+                      style={{
+                        borderColor: isTop3 ? tierColors[entry.tier] + '40' : undefined,
+                        boxShadow: isTop3 ? `0 0 30px ${tierColors[entry.tier]}15` : undefined,
+                      }}
+                    >
+                      {/* Top 3 special effects */}
+                      {isTop3 && (
+                        <>
+                          <div 
+                            className="absolute inset-0 rounded-xl opacity-20 pointer-events-none"
+                            style={{
+                              background: `linear-gradient(135deg, ${tierColors[entry.tier]}10 0%, transparent 50%)`,
+                            }}
+                          />
+                          <motion.div 
+                            className="absolute top-2 right-2"
+                            animate={{ rotate: [0, 10, -10, 0] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          >
+                            <Sparkles className="w-4 h-4" style={{ color: tierColors[entry.tier] }} />
+                          </motion.div>
+                        </>
+                      )}
+                      
+                      <div className="flex items-center gap-4 relative z-10">
+                        {/* Rank */}
+                        {getRankBadge(index)}
+                        
+                        {/* Avatar */}
+                        <div className="relative">
+                          {entry.avatar_url ? (
+                            <motion.img 
+                              src={entry.avatar_url} 
+                              alt={entry.display_name || entry.username}
+                              className="w-14 h-14 rounded-full border-2 object-cover"
+                              style={{ borderColor: tierColors[entry.tier] }}
+                              whileHover={{ scale: 1.1 }}
+                              transition={{ type: "spring", stiffness: 400 }}
+                            />
+                          ) : (
+                            <div 
+                              className="w-14 h-14 rounded-full border-2 bg-muted flex items-center justify-center"
+                              style={{ borderColor: tierColors[entry.tier] }}
+                            >
+                              <span className="font-bold text-lg">{entry.username[0].toUpperCase()}</span>
+                            </div>
+                          )}
+                          {entry.nft_minted && (
+                            <motion.div 
+                              className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-farcaster flex items-center justify-center border-2 border-background"
+                              whileHover={{ scale: 1.2 }}
+                            >
+                              <Gem className="w-3 h-3" />
+                            </motion.div>
+                          )}
+                        </div>
+
+                        {/* User info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-display font-bold text-lg truncate group-hover:text-primary transition-colors">
+                              {entry.display_name || entry.username}
+                            </span>
+                            {tierIcons[entry.tier]}
+                          </div>
+                          <span className="text-sm text-muted-foreground">@{entry.username}</span>
+                        </div>
+
+                        {/* Stats */}
+                        <div className="hidden md:flex items-center gap-8 text-sm">
+                          <div className="text-center">
+                            <span className="block text-muted-foreground text-xs mb-1">Casts</span>
+                            <span className="font-display font-bold">{entry.casts?.toLocaleString() || 0}</span>
+                          </div>
+                          <div className="text-center">
+                            <span className="block text-muted-foreground text-xs mb-1">Followers</span>
+                            <span className="font-display font-bold">{entry.followers?.toLocaleString() || 0}</span>
+                          </div>
+                          {entry.base_score && entry.base_score > 0 && (
+                            <div className="text-center">
+                              <span className="block text-muted-foreground text-xs mb-1">Base</span>
+                              <span className="font-display font-bold text-base">{entry.base_score}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Dynamic score based on filter */}
+                        <div className="text-right">
+                          <motion.div 
+                            className="px-4 py-2 rounded-xl flex flex-col items-end gap-0.5"
+                            style={{ 
+                              backgroundColor: `${tierColors[entry.tier]}20`,
+                            }}
+                            whileHover={{ scale: 1.05 }}
+                          >
+                            <span className="text-xs text-muted-foreground">
+                              {filterOptions.find(f => f.id === activeFilter)?.label}
+                            </span>
+                            <span 
+                              className="font-display font-black text-2xl"
+                              style={{ color: tierColors[entry.tier] }}
+                            >
+                              {displayValue}
+                            </span>
+                          </motion.div>
+                        </div>
                       </div>
-                    )}
-                    {entry.nft_minted && (
-                      <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-farcaster flex items-center justify-center">
-                        <Gem className="w-3 h-3" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* User info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-display font-bold truncate">
-                        {entry.display_name || entry.username}
-                      </span>
-                      {tierIcons[entry.tier]}
-                    </div>
-                    <span className="text-sm text-muted-foreground">@{entry.username}</span>
-                  </div>
-
-                  {/* Stats */}
-                  <div className="hidden sm:flex items-center gap-6 text-sm">
-                    <div className="text-center">
-                      <span className="block text-muted-foreground text-xs">Casts</span>
-                      <span className="font-display font-bold">{entry.casts?.toLocaleString() || 0}</span>
-                    </div>
-                    <div className="text-center">
-                      <span className="block text-muted-foreground text-xs">Followers</span>
-                      <span className="font-display font-bold">{entry.followers?.toLocaleString() || 0}</span>
-                    </div>
-                  </div>
-
-                  {/* Score */}
-                  <div 
-                    className="text-right px-4 py-2 rounded-lg"
-                    style={{ 
-                      backgroundColor: `${tierColors[entry.tier]}20`,
-                      color: tierColors[entry.tier],
-                    }}
-                  >
-                    <span className="font-display font-black text-2xl">{entry.score}</span>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                    </motion.div>
+                  </Link>
+                </TiltLeaderboardCard>
+              );
+            })}
           </div>
         )}
       </main>
+      
+      {/* Sticky Navigation */}
+      <StickyNav />
     </div>
   );
 };

@@ -1,16 +1,27 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import NinerCard from "./NinerCard";
+import TiltCard from "./TiltCard";
 import ScoreDisplay from "./ScoreDisplay";
 import StatsGrid from "./StatsGrid";
 import { MintNFTButton } from "./MintNFTButton";
+import { BaseScorePanel } from "./base/BaseScorePanel";
+import { CombinedScoreCard, type CombinedTierType } from "./base/CombinedScoreCard";
+import { BaseTransactions } from "./base/BaseTransactions";
+import { WalletConnector } from "./base/WalletConnector";
+import { ScoreBreakdownTooltip } from "./ScoreBreakdownTooltip";
+import { StreakBadge, StreakDisplay } from "./StreakBadge";
+import { useTierCelebration } from "./TierConfetti";
 import { Share2, Download, LogOut, Sparkles, MessageCircle, Trophy, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { TierType } from "./NinerCard";
 import type { FarcasterData } from "@/hooks/useFarcasterAuth";
+import { useBaseScore } from "@/hooks/useBaseScore";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { usePrimaryButton } from "@/hooks/usePrimaryButton";
+import { useMiniAppWallet } from "@/hooks/useMiniAppWallet";
 
 interface DashboardProps {
   data: FarcasterData;
@@ -26,17 +37,48 @@ const getTier = (score: number): TierType => {
   return "bronze";
 };
 
+const getCombinedTier = (combinedScore: number): CombinedTierType => {
+  if (combinedScore >= 900) return "diamond-pro";
+  if (combinedScore >= 801) return "diamond";
+  if (combinedScore >= 501) return "gold";
+  if (combinedScore >= 251) return "silver";
+  return "bronze";
+};
+
 const tierThresholds = [
   { tier: "Bronze", min: 0, max: 250, color: "hsl(30 60% 50%)" },
   { tier: "Silver", min: 251, max: 500, color: "hsl(220 15% 70%)" },
   { tier: "Gold", min: 501, max: 800, color: "hsl(45 100% 55%)" },
-  { tier: "Diamond", min: 801, max: 999, color: "hsl(200 100% 70%)" },
+  { tier: "Diamond", min: 801, max: 899, color: "hsl(200 100% 70%)" },
+  { tier: "Diamond Pro", min: 900, max: 1000, color: "hsl(220 90% 60%)" },
 ];
 
 export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: DashboardProps) => {
   const { user, activity, ninerScore } = data;
   const tier = getTier(ninerScore);
   const { toast } = useToast();
+  const { baseData, isLoading: baseLoading, fetchBaseScore } = useBaseScore();
+  const [manualWallets, setManualWallets] = useState<string[]>([]);
+  const { triggerConfetti } = useTierCelebration(tier);
+  const previousTierRef = useRef<string | null>(null);
+  const mintButtonRef = useRef<{ triggerMint: () => void } | null>(null);
+  
+  // Primary button hook for Mini App
+  const { setPrimaryButton, hidePrimaryButton, showLoading, hideLoading } = usePrimaryButton();
+  
+  // Mini App wallet for checking connection status
+  const miniAppWallet = useMiniAppWallet();
+  
+  // Mock streak days - in production this would come from activity data
+  const streakDays = Math.min(30, Math.floor(activity.totalCasts / 10));
+
+  // Combine verified addresses with manually added wallets
+  const allWallets = [...(user.verifiedAddresses || []), ...manualWallets];
+
+  // Calculate combined score
+  const baseScore = baseData?.score || 0;
+  const combinedScore = Math.round((ninerScore * 0.7) + (baseScore * 0.3));
+  const combinedTier = getCombinedTier(combinedScore);
 
   // Map activity to stats format
   const stats = {
@@ -49,6 +91,83 @@ export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: Dashb
       ? Math.round((activity.totalLikes + activity.totalRecasts) / Math.max(activity.totalCasts, 1) * 10) / 10
       : 0,
   };
+
+  // Set up primary button based on wallet connection status
+  useEffect(() => {
+    const isWalletConnected = miniAppWallet.isConnected;
+    
+    if (!isWalletConnected) {
+      // Show "Connect Wallet" button when not connected
+      setPrimaryButton(
+        { text: "🔗 Connect Wallet to Mint NFT" },
+        async () => {
+          try {
+            showLoading("Connecting...");
+            await miniAppWallet.connect();
+            hideLoading();
+          } catch {
+            hideLoading();
+            toast({
+              title: "Connection Failed",
+              description: "Please try again",
+              variant: "destructive",
+            });
+          }
+        }
+      );
+    } else {
+      // Show "Mint NFT" button when connected
+      setPrimaryButton(
+        { text: `✨ Mint ${tier.toUpperCase()} NFT Card` },
+        () => {
+          // Trigger the mint action from MintNFTButton
+          if (mintButtonRef.current?.triggerMint) {
+            mintButtonRef.current.triggerMint();
+          } else {
+            // Scroll to the mint button and show toast
+            toast({
+              title: "Ready to Mint",
+              description: "Tap the Mint NFT button below!",
+            });
+          }
+        }
+      );
+    }
+
+    return () => {
+      hidePrimaryButton();
+    };
+  }, [miniAppWallet.isConnected, tier, setPrimaryButton, hidePrimaryButton, showLoading, hideLoading, toast]);
+
+  // Fetch Base activity if user has verified addresses or manual wallets
+  useEffect(() => {
+    if (allWallets.length > 0) {
+      fetchBaseScore(allWallets);
+    }
+  }, [allWallets.length, fetchBaseScore]);
+
+  // Cache Base score when it's calculated
+  useEffect(() => {
+    if (baseScore > 0 && user.fid) {
+      supabase.functions.invoke('cache-base-score', {
+        body: {
+          fid: user.fid,
+          baseScore,
+          walletAddresses: allWallets,
+        },
+      }).catch(console.error);
+    }
+  }, [baseScore, user.fid, allWallets]);
+
+  // Handle adding a manual wallet
+  const handleAddWallet = useCallback(async (address: string) => {
+    setManualWallets(prev => [...prev, address]);
+  }, []);
+
+  // Handle removing a manual wallet
+  const handleRemoveWallet = useCallback((address: string) => {
+    setManualWallets(prev => prev.filter(w => w.toLowerCase() !== address.toLowerCase()));
+  }, []);
   
   // Save to leaderboard on mount - only sends FID and username
   // Score is calculated server-side for security
@@ -67,6 +186,24 @@ export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: Dashb
     };
     saveToLeaderboard();
   }, [user.fid]);
+
+  // Tier celebration effect
+  useEffect(() => {
+    if (previousTierRef.current && previousTierRef.current !== tier) {
+      const tierOrder = ["bronze", "silver", "gold", "diamond"];
+      const prevIndex = tierOrder.indexOf(previousTierRef.current);
+      const currentIndex = tierOrder.indexOf(tier);
+      
+      if (currentIndex > prevIndex) {
+        triggerConfetti(tier);
+        toast({
+          title: `🎉 Tier Upgrade!`,
+          description: `Congratulations! You've reached ${tier.toUpperCase()} tier!`,
+        });
+      }
+    }
+    previousTierRef.current = tier;
+  }, [tier, triggerConfetti, toast]);
 
   const handleShare = () => {
     navigator.clipboard.writeText(`🎯 My Niner Score: ${ninerScore} (${tier.toUpperCase()} Tier)\n\nCheck your Farcaster reputation at ninerscore.app`);
@@ -342,18 +479,23 @@ export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: Dashb
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <NinerCard
-              username={user.username}
-              displayName={user.displayName || user.username}
-              avatar={user.pfpUrl || ''}
-              score={ninerScore}
-              tier={tier}
-              stats={{
-                casts: stats.casts,
-                followers: stats.followers,
-                engagement: stats.engagement,
-              }}
-            />
+            <TiltCard 
+              glowColor={tier === 'diamond' ? 'hsl(190 100% 70%)' : tier === 'gold' ? 'hsl(45 100% 55%)' : tier === 'silver' ? 'hsl(220 15% 70%)' : 'hsl(30 60% 50%)'}
+              className="group"
+            >
+              <NinerCard
+                username={user.username}
+                displayName={user.displayName || user.username}
+                avatar={user.pfpUrl || ''}
+                score={ninerScore}
+                tier={tier}
+                stats={{
+                  casts: stats.casts,
+                  followers: stats.followers,
+                  engagement: stats.engagement,
+                }}
+              />
+            </TiltCard>
 
             {/* Action buttons */}
             <motion.div 
@@ -439,8 +581,16 @@ export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: Dashb
               )}
             </div>
 
-            {/* Score display */}
-            <div className="flex justify-center lg:justify-start">
+            {/* Score display with breakdown tooltip and streak */}
+            <div className="flex flex-col items-center lg:items-start gap-2">
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-muted-foreground">Your Score</span>
+                <ScoreBreakdownTooltip 
+                  stats={stats} 
+                  totalScore={ninerScore} 
+                />
+                {streakDays >= 1 && <StreakBadge streakDays={streakDays} />}
+              </div>
               <ScoreDisplay score={ninerScore} tier={tier} />
             </div>
 
@@ -475,6 +625,9 @@ export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: Dashb
               </motion.div>
             )}
 
+            {/* Streak Display */}
+            {streakDays >= 1 && <StreakDisplay streakDays={streakDays} />}
+
             {/* Stats grid */}
             <div>
               <motion.h3 
@@ -483,10 +636,39 @@ export const Dashboard = ({ data, onDisconnect, onRefresh, isRefreshing }: Dashb
                 transition={{ delay: 0.4 }}
                 className="font-display font-bold text-lg mb-4"
               >
-                Activity Breakdown
+                Farcaster Activity
               </motion.h3>
               <StatsGrid stats={stats} />
             </div>
+
+            {/* Combined Score Card */}
+            <CombinedScoreCard
+              farcasterScore={ninerScore}
+              baseScore={baseScore}
+              combinedScore={combinedScore}
+              tier={combinedTier}
+              isLoading={baseLoading}
+            />
+
+            {/* Base Chain Activity */}
+            <BaseScorePanel
+              activity={baseData?.activity || null}
+              score={baseScore}
+              isLoading={baseLoading}
+            />
+
+            {/* Wallet Connector */}
+            <WalletConnector
+              verifiedAddresses={allWallets}
+              onAddWallet={handleAddWallet}
+              onRemoveWallet={handleRemoveWallet}
+              isLoading={baseLoading}
+            />
+
+            {/* Base Transactions */}
+            {baseData?.activity?.recentTransactions && baseData.activity.recentTransactions.length > 0 && (
+              <BaseTransactions transactions={baseData.activity.recentTransactions} />
+            )}
 
             {/* Bio if available */}
             {user.bio && (

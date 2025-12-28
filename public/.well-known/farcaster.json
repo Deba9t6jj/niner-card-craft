@@ -10,6 +10,7 @@
     "homeUrl": "https://www.neynar-card-craft.fun",
     "iconUrl": "https://www.neynar-card-craft.fun/logo.png",
     "splashImageUrl": "https://www.neynar-card-craft.fun/splash.png",
+<<<<<<< HEAD
     "splashBackgroundColor": "#000000",
     "webhookUrl": "",
     "subtitle": "Your Farcaster Reputation NFT",
@@ -23,6 +24,18 @@
     "tagline": "Claim Your Identity Card",
     "ogTitle": "Niner Score",
     "ogDescription": "Your Farcaster Reputation NFT",
+=======
+    "splashBackgroundColor": "#0a0a0f",
+    "subtitle": "Your Farcaster Reputation NFT",
+    "description": "Get your Farcaster reputation NFT card. Bronze to Diamond tiers based on engagement.",
+    "screenshotUrls": [],
+    "primaryCategory": "social",
+    "tags": ["farcaster", "nft", "social", "reputation", "identity"],
+    "heroImageUrl": "https://www.neynar-card-craft.fun/og-image.png",
+    "tagline": "Claim Your Social Identity",
+    "ogTitle": "Niner Score — Farcaster NFT",
+    "ogDescription": "Free NFT Identity Cards for Farcaster based on your social reputation score.",
+>>>>>>> e2090492a8b1134ea762d0f140d6cb54e5ca3461
     "ogImageUrl": "https://www.neynar-card-craft.fun/og-image.png",
     "noindex": false
   }

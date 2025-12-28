@@ -56,6 +56,11 @@ export default {
           silver: "hsl(var(--tier-silver))",
           gold: "hsl(var(--tier-gold))",
           diamond: "hsl(var(--tier-diamond))",
+          "diamond-pro": "hsl(var(--tier-diamond-pro))",
+        },
+        base: {
+          DEFAULT: "hsl(var(--base))",
+          glow: "hsl(var(--base-glow))",
         },
         farcaster: {
           DEFAULT: "hsl(var(--farcaster))",
@@ -100,6 +105,18 @@ export default {
           "0%, 100%": { opacity: "0.4" },
           "50%": { opacity: "1" },
         },
+        "shimmer": {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+        "pulse-glow": {
+          "0%, 100%": { boxShadow: "0 0 20px hsl(var(--primary) / 0.3)" },
+          "50%": { boxShadow: "0 0 40px hsl(var(--primary) / 0.6)" },
+        },
+        "float": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-5px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -107,6 +124,9 @@ export default {
         "fade-in": "fade-in 0.6s ease-out forwards",
         "scale-in": "scale-in 0.4s ease-out forwards",
         "glow-pulse": "glow-pulse 2s ease-in-out infinite",
+        "shimmer": "shimmer 1.5s linear infinite",
+        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
+        "float": "float 3s ease-in-out infinite",
       },
     },
   },
