@@ -1,5 +1,12 @@
 import { sdk } from '@farcaster/miniapp-sdk';
 import React, { useEffect, useState } from 'react';
+
+// Extend Window interface for Base App
+declare global {
+  interface Window {
+    sendToBaseApp?: () => void;
+  }
+}
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";

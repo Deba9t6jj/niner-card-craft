@@ -12,6 +12,7 @@ interface MiniAppContextType {
   farcasterUser: FarcasterUser | null;
   setFarcasterUser: (user: FarcasterUser | null) => void;
   baseAppReady: boolean;
+  user: FarcasterUser | null; // Alias for farcasterUser
 }
 
 const MiniAppContext = createContext<MiniAppContextType | undefined>(undefined);
@@ -71,7 +72,8 @@ export const MiniAppProvider: React.FC<MiniAppProviderProps> = ({ children }) =>
         isMiniApp, 
         farcasterUser, 
         setFarcasterUser,
-        baseAppReady 
+        baseAppReady,
+        user: farcasterUser // Alias for farcasterUser
       }}
     >
       {children}
