@@ -20,32 +20,15 @@ const queryClient = new QueryClient();
 const BaseAppInitializer = () => {
   useEffect(() => {
     const isBaseApp = window.self !== window.top || 
-                     window.location.search.includes('mini_app=true') ||
-                     navigator.userAgent.includes('Farcaster') ||
-                     navigator.userAgent.includes('Base');
+                     window.location.search.includes('mini_app=true');
     
     if (isBaseApp) {
-      console.log('Base/Farcaster Mini App detected');
-      
       const sendReadySignal = () => {
-        const message = {
-          type: 'ready',
-          data: {
-            version: '1.0.0',
-            app: 'Niner Score',
-            url: window.location.href,
-            timestamp: Date.now()
-          }
-        };
-        
-        window.parent.postMessage(message, '*');
+        window.parent.postMessage({ type: 'ready' }, '*');
       };
       
       sendReadySignal();
-      
-      [100, 500, 1000, 2000, 3000, 5000].forEach(delay => {
-        setTimeout(sendReadySignal, delay);
-      });
+      setTimeout(sendReadySignal, 1000);
     }
   }, []);
   
