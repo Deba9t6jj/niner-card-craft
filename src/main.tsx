@@ -3,7 +3,11 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
-// Call ready immediately before React renders
-sdk.actions.ready().catch(console.error);
-
+// Render the app first
 createRoot(document.getElementById("root")!).render(<App />);
+
+// Call sdk.actions.ready() after DOM is ready to hide the splash screen
+// Using setTimeout to ensure React has mounted
+setTimeout(() => {
+  sdk.actions.ready().catch(console.error);
+}, 0);
