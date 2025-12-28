@@ -21,7 +21,15 @@ const queryClient = new QueryClient();
 
 const App = () => {
   React.useEffect(() => {
-    sdk.actions.ready();
+    const initMiniApp = async () => {
+      try {
+        await sdk.actions.ready();
+        console.log('Mini App SDK ready');
+      } catch (error) {
+        console.error('Mini App SDK error:', error);
+      }
+    };
+    initMiniApp();
   }, []);
 
   return (
