@@ -116,9 +116,100 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     
     <!-- ===================== -->
+    <!-- BASE APP COMMUNICATION SCRIPT (ADDED) -->
+    <!-- ===================== -->
+    <script>
+        // Base App Communication Script
+        (function() {
+            // Function to send ready signal to Base App
+            function sendBaseReady() {
+                if (window.self !== window.parent) {
+                    const messages = [
+                        { type: 'ready' },
+                        { type: 'mini_app_ready' },
+                        { type: 'app_ready', app: 'Niner Score', version: '1.0.0' },
+                        'ready',
+                        'mini_app_ready',
+                        { status: 'ready', app: 'niner-score' },
+                        { event: 'ready', source: 'mini-app' }
+                    ];
+                    
+                    messages.forEach(msg => {
+                        try {
+                            window.parent.postMessage(msg, '*');
+                            console.log('📤 Sent ready signal to Base:', msg);
+                        } catch (e) {
+                            console.log('Error sending message:', e);
+                        }
+                    });
+                    return true;
+                }
+                return false;
+            }
+            
+            // Send immediately when script loads
+            if (window.self !== window.parent) {
+                console.log('🚀 Base App environment detected (pre-React)');
+                
+                // Send initial signal
+                setTimeout(sendBaseReady, 50);
+                
+                // Send multiple times with delays
+                [100, 300, 600, 1000, 2000, 5000].forEach(delay => {
+                    setTimeout(sendBaseReady, delay);
+                });
+                
+                // Listen for Base App responses
+                window.addEventListener('message', function(event) {
+                    if (event.data?.type === 'ready_ack' || 
+                        event.data === 'ready_ack' ||
+                        event.data?.status === 'acknowledged') {
+                        console.log('🎉 Base App acknowledged!');
+                        // Update UI to show ready state
+                        document.body.classList.add('base-app-ready');
+                    }
+                    
+                    // Handle Farcaster user data
+                    if (event.data?.type === 'farcaster_user') {
+                        console.log('👤 Farcaster user received:', event.data.user);
+                        localStorage.setItem('farcaster_user', JSON.stringify(event.data.user));
+                    }
+                });
+                
+                // Expose function for React to use
+                window.sendBaseReady = sendBaseReady;
+                
+                // Add Base App CSS class
+                document.body.classList.add('base-app-environment');
+            }
+        })();
+    </script>
+    
+    <!-- ===================== -->
     <!-- MINI APP STYLES -->
     <!-- ===================== -->
     <style>
+        /* Base App Environment */
+        body.base-app-environment {
+            background: #0a0a0f;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        
+        body.base-app-ready::after {
+            content: '✅ Base App Connected';
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 200, 0, 0.2);
+            color: #00ff00;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 9999;
+        }
+        
         /* Mini App Detection & Styling */
         body.mini-app {
             background: #0a0a0f;
@@ -147,70 +238,6 @@
             border: 1px solid rgba(59, 130, 246, 0.3);
         }
     </style>
-    
-    <!-- ===================== -->
-    <!-- MINI APP DETECTION SCRIPT -->
-    <!-- ===================== -->
-    <script>
-        // Detect if running inside Base/Farcaster Mini App
-        (function() {
-            const isMiniApp = 
-                window.location.search.includes('mini_app=true') ||
-                window.location.search.includes('frame=true') ||
-                window.self !== window.top ||
-                navigator.userAgent.includes('Farcaster') ||
-                navigator.userAgent.includes('Base');
-            
-            if (isMiniApp) {
-                document.body.classList.add('mini-app');
-                
-                // Initialize mini app mode
-                console.log('Niner Score Mini App initialized');
-                
-                // Send ready message to parent (Base/Farcaster)
-                if (window.parent !== window.self) {
-                    window.parent.postMessage({
-                        type: 'mini_app_ready',
-                        app: 'Niner Score',
-                        version: '1.0.0',
-                        url: window.location.href
-                    }, '*');
-                }
-                
-                // Listen for messages from parent
-                window.addEventListener('message', function(event) {
-                    if (event.data.type === 'farcaster_user_data') {
-                        // Handle user data from Farcaster
-                        handleFarcasterUserData(event.data.user);
-                    }
-                    
-                    if (event.data.type === 'base_transaction') {
-                        // Handle Base transaction
-                        handleBaseTransaction(event.data.transaction);
-                    }
-                });
-                
-                function handleFarcasterUserData(user) {
-                    // Store user data for your app
-                    localStorage.setItem('farcaster_user', JSON.stringify(user));
-                    
-                    // Auto-fill username if available
-                    if (user.username) {
-                        console.log('Farcaster user detected:', user.username);
-                        // You can update your React app state here
-                        if (window.ReactApp && window.ReactApp.setUsername) {
-                            window.ReactApp.setUsername(user.username);
-                        }
-                    }
-                }
-                
-                function handleBaseTransaction(transaction) {
-                    console.log('Base transaction received:', transaction);
-                    // Handle NFT minting transaction
-                }
-            }
-        })();
-    </script>
 </head>
 <body>
     <!-- Your React App Root -->
@@ -275,6 +302,11 @@
         window.ReactApp.isMiniApp = function() {
             return document.body.classList.contains('mini-app');
         };
+        
+        // If Base App communication script loaded, send one more ready signal
+        if (window.sendBaseReady) {
+            setTimeout(window.sendBaseReady, 1500);
+        }
     </script>
 </body>
 </html>
