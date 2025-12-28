@@ -1,25 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Niner Score | Farcaster Reputation NFT Identity Cards</title>
-    <meta name="description" content="Get your free NFT identity card based on your Farcaster engagement score. Bronze, Silver, Gold, or Diamond — claim your tier now." />
-    <meta name="keywords" content="Farcaster, NFT, identity card, social reputation, Web3, Base, OpenSea" />
-    <meta name="author" content="Niner Score" />
-    <meta property="og:title" content="Niner Score — Your Farcaster Reputation NFT" />
-    <meta property="og:description" content="Connect your Farcaster account and receive a unique NFT identity card based on your social engagement." />
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    
+    <!-- Farcaster Frame Meta Tags -->
+    <meta property="fc:frame" content="vNext" />
+    <meta property="fc:frame:image" content="https://www.neynar-card-craft.fun/og-image.png" />
+    <meta property="fc:frame:image:aspect_ratio" content="1:1" />
+    <meta property="fc:frame:button:1" content="🎴 Create Card" />
+    <meta property="fc:frame:button:1:action" content="post_redirect" />
+    <meta property="fc:frame:button:2" content="✨ Mint NFT" />
+    <meta property="fc:frame:button:2:action" content="post" />
+    <meta property="fc:frame:post_url" content="https://www.neynar-card-craft.fun/api/frame" />
+    
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="Neynar Card Craft" />
+    <meta property="og:description" content="Create and share beautiful Neynar cards on Base Network" />
+    <meta property="og:image" content="https://www.neynar-card-craft.fun/og-image.png" />
+    <meta property="og:url" content="https://www.neynar-card-craft.fun" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@NinerScore" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-    <link rel="canonical" href="https://www.neynar-card-craft.fun" />
-    <meta property="fc:miniapp" content="true" />
-    <script src="https://unpkg.com/@farcaster/miniapp-sdk@latest"></script>
-</head>
-<body>
+    <meta name="twitter:title" content="Neynar Card Craft" />
+    <meta name="twitter:description" content="Create and share beautiful Neynar cards on Base Network" />
+    <meta name="twitter:image" content="https://www.neynar-card-craft.fun/og-image.png" />
+    
+    <!-- Frame Compatibility -->
+    <meta name="frame-options" content="ALLOW-FROM https://frames.basedapps.com" />
+    
+    <!-- App Name -->
+    <title>Neynar Card Craft - Base Mini App</title>
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-</body>
-</html>AAA
+  </body>
+</html>

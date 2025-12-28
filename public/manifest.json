@@ -1,0 +1,16 @@
+{
+  "name": "Neynar Card Craft",
+  "short_name": "CardCraft",
+  "description": "Create and share beautiful Neynar cards on Base",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#0052FF",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}

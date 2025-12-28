@@ -1,27 +1,29 @@
 {
   "accountAssociation": {
-    "header": "",
-    "payload": "",
-    "signature": ""
+    "header": "eyJmaWQiOi0xLCJ0eXBlIjoiYXV0aCIsImtleSI6IjB4MkRDQTM4NTFmZUQwQkMzMDIyNzU0NEIxZDNjYUVDODk3MzhBN0QyMyJ9",
+    "payload": "eyJkb21haW4iOiJ3d3cubmV5bmFyLWNhcmQtY3JhZnQuZnVuIn0",
+    "signature": "AAAAAAAAAAAAAAAAyhG94Fl3s2MRZwKIYr4qFzl2yhEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAiSCrVbLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAul7REO_bo9AFv8iC11NYrLu4WEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASQ_-6NvAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAANDNYdQmowFlvMVjcBS7U2i3IhpUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAPhSELIcxQMC9He6VmhtIBncm2etAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBKg4upXXyNroKuEYSs3jXVSbvW9JfnBB9yTSLZ1PoaT8FioFuTjbSKIuP-gT0ciAvXYTPIavlIWKI1qQbH_CvOhsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZJJkkmSSZJJkkmSSZJJkkmSSZJJkkmSSZJJkkmSSZJI"
   },
   "miniapp": {
     "version": "1",
     "name": "Niner Score",
     "homeUrl": "https://www.neynar-card-craft.fun",
-    "iconUrl": "https://www.neynar-card-craft.fun/icon.png",
+    "iconUrl": "https://www.neynar-card-craft.fun/logo.png",
     "splashImageUrl": "https://www.neynar-card-craft.fun/splash.png",
     "splashBackgroundColor": "#000000",
     "webhookUrl": "",
-    "subtitle": "Your Farcaster Reputation Score",
-    "description": "Get your free NFT identity card based on your Farcaster engagement score.",
-    "screenshotUrls": [],
+    "subtitle": "Your Farcaster Reputation NFT",
+    "description": "Connect your Farcaster account and receive a unique NFT identity card based on your social reputation.",
+    "screenshotUrls": [
+      "https://www.neynar-card-craft.fun/screenshot.png"
+    ],
     "primaryCategory": "social",
     "tags": ["farcaster", "nft", "social", "reputation"],
-    "heroImageUrl": "https://lovable.dev/opengraph-image-p98pqg.png",
-    "tagline": "Claim Your Social Identity",
-    "ogTitle": "Niner Score — Your Farcaster Reputation NFT",
-    "ogDescription": "Connect your Farcaster account and receive a unique NFT identity card.",
-    "ogImageUrl": "https://lovable.dev/opengraph-image-p98pqg.png",
+    "heroImageUrl": "https://www.neynar-card-craft.fun/og-image.png",
+    "tagline": "Claim Your Identity Card",
+    "ogTitle": "Niner Score",
+    "ogDescription": "Your Farcaster Reputation NFT",
+    "ogImageUrl": "https://www.neynar-card-craft.fun/og-image.png",
     "noindex": false
   }
 }

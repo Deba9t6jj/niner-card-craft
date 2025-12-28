@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manifest Check</title>
+</head>
+<body>
+    <h1>Manifest.json Check</h1>
+    <div id="result"></div>
+    
+    <script>
+        fetch('/manifest.json')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('result').innerHTML = 
+                    '<h2>✅ Manifest.json Loaded Successfully!</h2>' +
+                    '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            })
+            .catch(error => {
+                document.getElementById('result').innerHTML = 
+                    '<h2>❌ Error loading manifest.json</h2>' +
+                    '<p>' + error + '</p>';
+            });
+    </script>
+</body>
+</html>
