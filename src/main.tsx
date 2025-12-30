@@ -3,11 +3,20 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
-// Render the app first
+// Initialize the Mini App SDK
+async function initMiniApp() {
+  try {
+    // Call ready to hide splash screen - must be called for the app to work
+    await sdk.actions.ready();
+    console.log('Farcaster Mini App SDK ready');
+  } catch (error) {
+    // Not running in a Farcaster client, that's okay
+    console.log('Not in Farcaster Mini App context:', error);
+  }
+}
+
+// Render the app
 createRoot(document.getElementById("root")!).render(<App />);
 
-// Call sdk.actions.ready() after DOM is ready to hide the splash screen
-// Using setTimeout to ensure React has mounted
-setTimeout(() => {
-  sdk.actions.ready().catch(console.error);
-}, 0);
+// Initialize SDK after render
+initMiniApp();
